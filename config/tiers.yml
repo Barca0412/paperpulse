@@ -1,0 +1,48 @@
+tier_rules:
+  A:
+    venues:
+      - "NeurIPS"
+      - "ICML"
+      - "ICLR"
+      - "KDD"
+      - "AAAI"
+      - "IJCAI"
+      - "WWW"
+      - "TheWebConf"
+      - "AAMAS"
+      - "EMNLP"
+      - "ACL"
+      - "CIKM"
+      - "SIGIR"
+      - "COLM"
+      - "Journal of Finance"
+      - "Journal of Financial Economics"
+      - "Review of Financial Studies"
+      - "JFQA"
+      - "Management Science"
+      - "Review of Finance"
+      - "Journal of Financial Markets"
+      - "Journal of Banking and Finance"
+      - "AFA Annual Meeting"
+      - "WFA Annual Meeting"
+      - "EFA Annual Meeting"
+      - "ACM ICAIF"
+      - "Journal of Financial Data Science"
+      - "Quantitative Finance"
+      - "Journal of Portfolio Management"
+      - "Algorithmic Finance"
+    auto_include: true
+
+  B_score:
+    weights:
+      level2_similarity: 0.30
+      institution_whitelist: 0.20
+      citation_velocity: 0.15
+      pwc_has_code: 0.10
+      hf_daily_papers: 0.10
+      tracked_author: 0.15
+    threshold: 0.50
+
+  C:
+    description: "匹配关键词但不满足 A/B 条件"
+    default_collapsed_in_feed: true

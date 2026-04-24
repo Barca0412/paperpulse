@@ -1,0 +1,52 @@
+positive:
+  cs_core:
+    - "large language model"
+    - "LLM"
+    - "LLM agent"
+    - "reinforcement learning"
+    - "RLHF"
+    - "multi-agent"
+    - "foundation model"
+    - "benchmark"
+    - "transformer"
+    - "in-context learning"
+
+  finance_core:
+    - "asset pricing"
+    - "factor model"
+    - "market microstructure"
+    - "behavioral finance"
+    - "trading strategy"
+    - "portfolio"
+    - "limit order book"
+    - "volatility"
+
+  crosscut:
+    - "FinBERT"
+    - "BloombergGPT"
+    - "FinGPT"
+    - "financial LLM"
+    - "deep hedging"
+    - "alt data"
+
+strong_negative:
+  - "image classification"
+  - "object detection"
+  - "medical imaging"
+  - "autonomous driving"
+  - "speech recognition"
+  - "protein folding"
+  - "molecular dynamics"
+
+weak_negative:
+  - "legal text classification"
+  - "recommender system"
+  - "educational AI"
+
+immune:
+  - "finance"
+  - "trading"
+  - "market"
+  - "investment"
+  - "portfolio"
+  - "asset"

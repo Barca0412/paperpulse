@@ -1,0 +1,101 @@
+sources:
+  # === Primary sources ===
+  arxiv:
+    enabled: true
+    categories:
+      - cs.LG
+      - cs.CL
+      - cs.AI
+      - cs.MA
+      - q-fin.CP
+      - q-fin.GN
+      - q-fin.MF
+      - q-fin.PM
+      - q-fin.PR
+      - q-fin.RM
+      - q-fin.ST
+      - q-fin.TR
+      - econ.EM
+    fetch_window_days: 3
+    max_results_per_run: 200
+    use_ar5iv_fallback: true
+
+  # === Working paper sources (all 9) ===
+  nber:
+    enabled: true
+    rss_url: "https://www.nber.org/rss/new.xml"
+
+  cepr:
+    enabled: false
+    base_url: "https://cepr.org/publications/discussion-papers"
+    fetch_mode: "scrape_list"
+
+  fed_feds:
+    enabled: false
+    base_url: "https://www.federalreserve.gov/econres/feds/"
+
+  ecb_wps:
+    enabled: false
+    rss_url: "https://www.ecb.europa.eu/rss/wps.html"
+
+  boe_swp:
+    enabled: false
+    base_url: "https://www.bankofengland.co.uk/working-paper"
+
+  bis_wp:
+    enabled: false
+    rss_url: "https://www.bis.org/doclist/wppubls.rss"
+
+  imf_wp:
+    enabled: false
+    base_url: "https://www.imf.org/en/Publications/WP"
+
+  riksbank:
+    enabled: false
+    base_url: "https://www.riksbank.se/en-gb/press-and-published/publications/working-paper-series/"
+
+  oenb:
+    enabled: false
+    base_url: "https://www.oenb.at/en/Publications/Economics/Working-Papers.html"
+
+  # === Conference proceedings ===
+  openreview:
+    enabled: false
+    venues:
+      - "ICLR.cc/2026/Conference"
+      - "NeurIPS.cc/2026/Conference"
+      - "ICML.cc/2026/Conference"
+    fetch_mode: "submissions"
+
+  acl_anthology:
+    enabled: false
+    update_frequency: "weekly"
+
+  # === Top finance journals via Crossref + publisher RSS (12 journals) ===
+  crossref_journals:
+    enabled: false
+    journals:
+      - {name: "Journal of Finance", issn: "0022-1082"}
+      - {name: "Journal of Financial Economics", issn: "0304-405X"}
+      - {name: "Review of Financial Studies", issn: "0893-9454"}
+      - {name: "Journal of Financial and Quantitative Analysis", issn: "0022-1090"}
+      - {name: "Management Science", issn: "0025-1909"}
+      - {name: "Review of Finance", issn: "1572-3097"}
+      - {name: "Journal of Financial Markets", issn: "1386-4181"}
+      - {name: "Journal of Banking and Finance", issn: "0378-4266"}
+      - {name: "Quantitative Finance", issn: "1469-7688"}
+      - {name: "Journal of Financial Data Science", issn: "2640-3943"}
+      - {name: "Journal of Portfolio Management", issn: "0095-4918"}
+      - {name: "Algorithmic Finance", issn: "2158-5571"}
+
+  # === Placeholder for SSRN (disabled) ===
+  ssrn:
+    enabled: false
+    placeholder_note: "SSRN ingestion removed in v1.1 due to RSS limitations. Enable only if future workaround found."
+
+global:
+  user_agent: "PaperPulse/0.1 (research tool; rigi.jx@gmail.com)"
+  polite_delay_ms: 1000
+  retry_max: 3
+  retry_backoff: "exponential"
+  timeout_seconds: 30

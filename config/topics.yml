@@ -1,0 +1,11 @@
+topics:
+  - name: "LLM Agents for Finance"
+    slug: "llm-agents-finance"
+    side: "crosscut"
+    description_en: |
+      Large language model agents applied to financial tasks including trading
+      decisions, portfolio management, investment research automation, financial
+      report generation, and analyst workflow support.
+    description_zh: "LLM 金融 agent，涵盖交易决策、组合管理、研究自动化、报告生成、分析师辅助。"
+    weight: 1.5
+    color: "#8b5cf6"

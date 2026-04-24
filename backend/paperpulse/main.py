@@ -19,7 +19,14 @@ from paperpulse.api.router import api_router
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
-    yield
+    from paperpulse.config import get_store
+
+    store = get_store()
+    store.start_watching()
+    try:
+        yield
+    finally:
+        store.stop_watching()
 
 
 def create_app() -> FastAPI:

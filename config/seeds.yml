@@ -1,0 +1,6 @@
+seed_papers: []
+user_must_read_papers: []
+seed_meta:
+  last_embedded_at: null
+  embedding_model: "bge-m3"
+  total_active: 0

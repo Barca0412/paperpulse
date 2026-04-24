@@ -1,0 +1,7 @@
+whitelist:
+  academic_cs: []
+  academic_finance: []
+  industry_ai: []
+  industry_finance: []
+  government_regulator: []
+blacklist: []

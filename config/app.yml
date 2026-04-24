@@ -1,0 +1,65 @@
+schedule:
+  daily_ingest_time: "07:30"
+  weekly_digest_time: "Mon 08:00"
+  signal_refresh_time: "02:00"
+  timezone: "Asia/Singapore"
+
+filters:
+  level1:
+    enabled: true
+    require_positive_match: true
+    min_positive_hits: 1
+  level2:
+    enabled: true
+    similarity_threshold: 0.30
+    top_k_seeds_match: 3
+    model: "bge-m3"
+  level3:
+    enabled: true
+
+enrichment:
+  embedding:
+    provider: "local"
+    model: "bge-m3"
+    batch_size: 32
+  tldr:
+    enabled: true
+    model: "claude-haiku-4-5"
+    languages: ["en", "zh"]
+    max_tokens: 200
+  topic_classification:
+    enabled: true
+    model: "claude-haiku-4-5"
+    multilabel: true
+  weekly_digest:
+    enabled: true
+    model: "claude-sonnet-4-6"
+    language: "zh"
+  budget_cap:
+    max_papers_per_day_full_enrich: 500
+    fallback_strategy: "defer"
+    priority_on_overflow: "tier_a_first"
+
+integrations:
+  zotero:
+    enabled: false
+    library_id: null
+    api_key: null
+    sync_collection_name: "PaperPulse Must Read"
+    sync_on: ["must_read"]
+
+display:
+  feed:
+    default_time_window: "today"
+    default_group_by: "topic"
+    default_topic_mode: "primary"
+    default_sort: "relevance_desc"
+    default_hide_tier_c: true
+    page_size: 30
+  dashboard:
+    default_window_days: 30
+
+network:
+  allow_pdf_download: true
+  pdf_download_max_mb: 500
+  cache_dir: null
