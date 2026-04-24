@@ -1,4 +1,10 @@
-import type { FeedResponse, HealthResponse, IngestResponse } from "./types";
+import type {
+  Author,
+  FeedResponse,
+  HealthResponse,
+  IngestResponse,
+  Institution,
+} from "./types";
 
 const BASE =
   (import.meta as unknown as { env: { VITE_BACKEND_URL?: string } }).env
@@ -29,4 +35,12 @@ export const api = {
     jpost<IngestResponse>("/api/v1/settings/ingest/run-now", {
       sources: sources ?? null,
     }),
+  getInstitutions: (windowDays = 30, limit = 50) =>
+    jget<Institution[]>(
+      `/api/v1/institutions?window_days=${windowDays}&limit=${limit}`,
+    ),
+  getAuthors: (windowDays = 30, limit = 100) =>
+    jget<Author[]>(
+      `/api/v1/authors?window_days=${windowDays}&limit=${limit}`,
+    ),
 };

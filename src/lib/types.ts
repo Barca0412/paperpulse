@@ -40,3 +40,25 @@ export type FeedResponse = {
 export type IngestResponse = { queued: string[] };
 
 export type HealthResponse = { status: string; version: string };
+
+export type Institution = {
+  id: string;
+  name: string;
+  country_code: string | null;
+  city: string | null;
+  type: string | null;
+  ror_id: string | null;
+  in_whitelist: boolean;
+  paper_count_30d: number;
+  paper_count_total: number;
+};
+
+export type Author = {
+  id: string;
+  name: string;
+  openalex_id: string | null;
+  orcid: string | null;
+  is_tracked: boolean;
+  paper_count_30d: number;
+  paper_count_total: number;
+};
