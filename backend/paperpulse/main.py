@@ -39,6 +39,11 @@ def _on_config_change(name: str) -> None:
         if anchor_cache is not None:
             anchor_cache.rebuild()  # type: ignore[attr-defined]
             _log.info("%s.yml change → anchor cache rebuilt", name)
+    elif name == "tiers":
+        from paperpulse.filter.pipeline import rescore_l3_all
+
+        n = rescore_l3_all()
+        _log.info("tiers.yml change → L3 rescored %d papers", n)
 
 
 @asynccontextmanager

@@ -12,9 +12,14 @@ from dataclasses import dataclass
 from paperpulse.config import get_store
 from paperpulse.db.duckdb_client import execute, fetchall
 from paperpulse.filter import embedding as _emb
-from paperpulse.filter.anchors import load_keywords, load_tier_a_venues
+from paperpulse.filter.anchors import (
+    load_keywords,
+    load_tier_a_venues,
+    load_tier_rules,
+)
 from paperpulse.filter.keywords import level1_filter
 from paperpulse.filter.semantic import L2Config, level2_filter
+from paperpulse.filter.tiers import PaperForScoring, Signals, level3_tier
 from paperpulse.filter.vectors_store import PaperVectorStore
 
 _log = logging.getLogger(__name__)
@@ -108,18 +113,98 @@ def filter_paper_l2(paper_id: str) -> tuple[bool, float, str | None]:
     return ok, score, label
 
 
+def filter_paper_l3(paper_id: str) -> tuple[str, float]:
+    """L3 tier scoring. Writes tier + level3_tier_b_score.
+
+    Caller is responsible for ensuring the paper reaches L3 (L1 pass and
+    either L2 pass or institution whitelist hit — see ``filter_paper``).
+    """
+    rows = fetchall(
+        "SELECT venue_normalized, level2_score FROM papers WHERE id = ?", [paper_id]
+    )
+    if not rows:
+        return "C", 0.0
+    venue, l2 = rows[0]
+
+    inst_rows = fetchall(
+        "SELECT i.in_whitelist, i.whitelist_priority "
+        "FROM paper_institutions pi "
+        "JOIN institutions i ON pi.institution_id = i.id "
+        "WHERE pi.paper_id = ?",
+        [paper_id],
+    )
+    institutions: list[dict[str, object]] = [
+        {"in_whitelist": bool(r[0]), "whitelist_priority": r[1]} for r in inst_rows
+    ]
+    tracked_rows = fetchall(
+        "SELECT 1 FROM paper_authors pa JOIN authors a ON pa.author_id = a.id "
+        "WHERE pa.paper_id = ? AND a.is_tracked = TRUE LIMIT 1",
+        [paper_id],
+    )
+
+    paper = PaperForScoring(
+        venue_normalized=venue,
+        level2_score=l2 or 0.0,
+        institutions=institutions,
+        authors_is_tracked=bool(tracked_rows),
+    )
+    rules = load_tier_rules(get_store())
+    tier, score = level3_tier(paper, rules, Signals())
+    execute(
+        "UPDATE papers SET tier = ?, level3_tier_b_score = ? WHERE id = ?",
+        [tier, score, paper_id],
+    )
+    return tier, score
+
+
+def _has_whitelist_hit(paper_id: str) -> bool:
+    rows = fetchall(
+        "SELECT 1 FROM paper_institutions pi "
+        "JOIN institutions i ON pi.institution_id = i.id "
+        "WHERE pi.paper_id = ? AND i.in_whitelist = TRUE LIMIT 1",
+        [paper_id],
+    )
+    return bool(rows)
+
+
 def filter_paper(paper_id: str) -> None:
     """Full pipeline for one paper. Spec §10.4.
 
-    L1 → L2. Institution-whitelist L2-exemption + L3 tier scoring land
-    in PR #3.5. Until then: L1-fail → tier=C; L1-pass → L2 scores + no
-    tier assigned yet (Feed will treat tier=NULL as "unscored").
+    L1 fail → tier=C, return.
+    L1 passed via Tier-A venue → skip L2 (don't let a semantic miss drop
+    a NeurIPS/JF paper), go straight to L3 which returns A.
+    L1 pass via keyword → L2 scores.
+      L2 fail + no institution whitelist hit → tier=C, return.
+      otherwise → L3 assigns A/B/C.
     """
-    l1_ok, _ = filter_paper_l1(paper_id)
+    l1_ok, l1_reasons = filter_paper_l1(paper_id)
     if not l1_ok:
         execute("UPDATE papers SET tier = ? WHERE id = ?", ["C", paper_id])
         return
-    filter_paper_l2(paper_id)
+
+    via_venue_a = any(r.startswith("venue_A:") for r in l1_reasons)
+    if not via_venue_a:
+        l2_ok, _, _ = filter_paper_l2(paper_id)
+        if not l2_ok and not _has_whitelist_hit(paper_id):
+            execute(
+                "UPDATE papers SET tier = ?, level3_tier_b_score = ? WHERE id = ?",
+                ["C", 0.0, paper_id],
+            )
+            return
+    filter_paper_l3(paper_id)
+
+
+def rescore_l3_all() -> int:
+    """Re-run L3 for every L1-passed paper. Called on tiers.yml change."""
+    rows = fetchall("SELECT id FROM papers WHERE level1_passed = TRUE")
+    n = 0
+    for (pid,) in rows:
+        try:
+            filter_paper_l3(str(pid))
+            n += 1
+        except Exception:
+            _log.exception("L3 rescore failed for %s", pid)
+    return n
 
 
 def rescore_l1_all() -> int:

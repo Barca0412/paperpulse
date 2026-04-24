@@ -99,3 +99,58 @@ export async function saveTopics(p: TopicsPayload): Promise<TopicsPayload> {
   const body = (await r.json()) as Partial<TopicsPayload>;
   return { topics: body.topics ?? [] };
 }
+
+export interface TiersPayload {
+  tier_rules: {
+    A: { venues: string[]; auto_include?: boolean };
+    B_score: { weights: Record<string, number>; threshold: number };
+    C?: Record<string, unknown>;
+  };
+}
+
+export async function getTiers(): Promise<TiersPayload> {
+  const r = await fetch(`${BASE}/api/v1/settings/tiers`);
+  if (!r.ok) throw new Error(`getTiers ${r.status} ${await r.text()}`);
+  const body = (await r.json()) as Partial<TiersPayload>;
+  return {
+    tier_rules: body.tier_rules ?? {
+      A: { venues: [], auto_include: true },
+      B_score: { weights: {}, threshold: 0.5 },
+      C: {},
+    },
+  };
+}
+
+export async function saveTiers(p: TiersPayload): Promise<TiersPayload> {
+  const r = await fetch(`${BASE}/api/v1/settings/tiers`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(p),
+  });
+  if (!r.ok) throw new Error(`saveTiers ${r.status} ${await r.text()}`);
+  const body = (await r.json()) as Partial<TiersPayload>;
+  return {
+    tier_rules: body.tier_rules ?? p.tier_rules,
+  };
+}
+
+export interface SimulateResult {
+  total: number;
+  tier_a: number;
+  tier_b: number;
+  tier_c: number;
+}
+
+export async function simulateTiers(
+  A_venues: string[],
+  B_weights: Record<string, number>,
+  B_threshold: number,
+): Promise<SimulateResult> {
+  const r = await fetch(`${BASE}/api/v1/settings/tiers/simulate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ A_venues, B_weights, B_threshold }),
+  });
+  if (!r.ok) throw new Error(`simulateTiers ${r.status} ${await r.text()}`);
+  return (await r.json()) as SimulateResult;
+}

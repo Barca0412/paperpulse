@@ -115,3 +115,46 @@ async def get_topics() -> dict[str, Any]:
 async def post_topics(payload: TopicsPayload) -> dict[str, Any]:
     _write("topics", payload.model_dump())
     return _read("topics")
+
+
+# ── Tier rules ────────────────────────────────────────────────────────────
+
+
+class TierRulesPayload(BaseModel):
+    tier_rules: dict[str, Any]
+
+
+@router.get("/tiers")
+async def get_tiers() -> dict[str, Any]:
+    return _read("tiers")
+
+
+@router.post("/tiers")
+async def post_tiers(payload: TierRulesPayload) -> dict[str, Any]:
+    _write("tiers", payload.model_dump())
+    return _read("tiers")
+
+
+class SimulateTiersPayload(BaseModel):
+    A_venues: list[str]
+    B_weights: dict[str, float]
+    B_threshold: float
+    limit: int | None = None
+
+
+@router.post("/tiers/simulate")
+async def simulate_tiers_ep(payload: SimulateTiersPayload) -> dict[str, int]:
+    from paperpulse.filter.simulate import simulate_tiers
+    from paperpulse.filter.tiers import BScore, TierRules
+
+    rules = TierRules(
+        A_venues=set(payload.A_venues),
+        B=BScore(weights=dict(payload.B_weights), threshold=payload.B_threshold),
+    )
+    r = simulate_tiers(rules, limit=payload.limit)
+    return {
+        "total": r.total,
+        "tier_a": r.tier_a,
+        "tier_b": r.tier_b,
+        "tier_c": r.tier_c,
+    }

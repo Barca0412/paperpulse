@@ -16,6 +16,7 @@ import numpy as np
 from paperpulse.config import ConfigStore
 from paperpulse.filter import embedding as _emb
 from paperpulse.filter.keywords import Keywords
+from paperpulse.filter.tiers import BScore, TierRules
 
 _log = logging.getLogger(__name__)
 
@@ -37,6 +38,19 @@ def load_tier_a_venues(store: ConfigStore) -> set[str]:
     cfg = store.get("tiers") or {}
     venues = (cfg.get("tier_rules") or {}).get("A", {}).get("venues") or []
     return set(venues)
+
+
+def load_tier_rules(store: ConfigStore) -> TierRules:
+    cfg = (store.get("tiers") or {}).get("tier_rules") or {}
+    a = cfg.get("A") or {}
+    b = cfg.get("B_score") or {}
+    return TierRules(
+        A_venues=set(a.get("venues") or []),
+        B=BScore(
+            weights=dict(b.get("weights") or {}),
+            threshold=float(b.get("threshold") or 0.5),
+        ),
+    )
 
 
 def _effective_weight(seed: dict[str, Any]) -> float:

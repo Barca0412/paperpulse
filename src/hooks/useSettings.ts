@@ -6,9 +6,12 @@ import {
   saveSeeds,
   getTopics,
   saveTopics,
+  getTiers,
+  saveTiers,
   type KeywordsPayload,
   type SeedsPayload,
   type TopicsPayload,
+  type TiersPayload,
 } from "@/lib/settings";
 
 export type SettingsState<T> =
@@ -54,3 +57,4 @@ function createHook<T>(load: () => Promise<T>, store: (v: T) => Promise<T>) {
 export const useKeywords = createHook<KeywordsPayload>(getKeywords, saveKeywords);
 export const useSeeds = createHook<SeedsPayload>(getSeeds, saveSeeds);
 export const useTopics = createHook<TopicsPayload>(getTopics, saveTopics);
+export const useTiers = createHook<TiersPayload>(getTiers, saveTiers);

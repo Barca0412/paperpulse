@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import KeywordsTab from "./KeywordsTab";
 import SeedsTab from "./SeedsTab";
 import TopicsTab from "./TopicsTab";
+import TierRulesTab from "./TierRulesTab";
 
 const TABS = [
   { slug: "keywords", label: "Keywords" },
@@ -10,14 +11,6 @@ const TABS = [
   { slug: "topics", label: "Topics" },
   { slug: "tiers", label: "Tier Rules" },
 ];
-
-function Stub({ pr }: { pr: string }) {
-  return (
-    <div className="p-6 text-sm text-muted-foreground">
-      Coming in {pr}.
-    </div>
-  );
-}
 
 export default function Settings() {
   return (
@@ -51,7 +44,7 @@ export default function Settings() {
             <Route path="keywords" element={<KeywordsTab />} />
             <Route path="seeds" element={<SeedsTab />} />
             <Route path="topics" element={<TopicsTab />} />
-            <Route path="tiers" element={<Stub pr="PR #3.5" />} />
+            <Route path="tiers" element={<TierRulesTab />} />
           </Routes>
         </div>
       </div>
