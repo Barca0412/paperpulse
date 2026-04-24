@@ -79,17 +79,17 @@ class NberSource(Source):
         self.user_agent = user_agent
         self.timeout_seconds = timeout_seconds
 
-    def fetch(self, since: datetime | None = None) -> Iterator[RawPaper]:  # noqa: ARG002
+    def fetch(self, since: datetime | None = None) -> Iterator[RawPaper]:
         req = urllib.request.Request(_RSS_URL, headers={"User-Agent": self.user_agent})
         _log.info("fetching NBER RSS")
-        with urllib.request.urlopen(req, timeout=self.timeout_seconds) as resp:  # noqa: S310
+        with urllib.request.urlopen(req, timeout=self.timeout_seconds) as resp:
             xml_bytes = resp.read()
         yield from parse_rss(xml_bytes)
 
     def health_check(self) -> bool:
         try:
             req = urllib.request.Request(_RSS_URL, headers={"User-Agent": self.user_agent})
-            with urllib.request.urlopen(req, timeout=self.timeout_seconds) as resp:  # noqa: S310
+            with urllib.request.urlopen(req, timeout=self.timeout_seconds) as resp:
                 return bool(resp.status == 200)
         except Exception:
             _log.exception("NBER health check failed")

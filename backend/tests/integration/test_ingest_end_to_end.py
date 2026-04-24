@@ -17,7 +17,7 @@ FIXTURE = Path(__file__).resolve().parents[1] / "fixtures" / "arxiv" / "sample_r
 class _FixtureSource(Source):
     name = "arxiv"
 
-    def fetch(self, since: datetime | None = None) -> Iterator[RawPaper]:  # noqa: ARG002
+    def fetch(self, since: datetime | None = None) -> Iterator[RawPaper]:
         yield from parse_atom_feed(FIXTURE.read_bytes())
 
     def health_check(self) -> bool:

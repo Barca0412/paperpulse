@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
-from paperpulse.api import hello
+from paperpulse.api import feed, hello, settings
 
 api_router = APIRouter()
 api_router.include_router(hello.router)
+api_router.include_router(feed.router)
+api_router.include_router(settings.router)

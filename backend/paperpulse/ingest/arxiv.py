@@ -96,7 +96,7 @@ class ArxivSource(Source):
         self.user_agent = user_agent
         self.timeout_seconds = timeout_seconds
 
-    def fetch(self, since: datetime | None = None) -> Iterator[RawPaper]:  # noqa: ARG002
+    def fetch(self, since: datetime | None = None) -> Iterator[RawPaper]:
         # Phase 1: ignore `since` and just grab the most recent N papers per
         # category (sorted by submittedDate desc). Incremental high-watermark
         # logic ships with the dedup PR (#1.3) using ingest_runs.
@@ -116,7 +116,7 @@ class ArxivSource(Source):
         url = f"{_ARXIV_API}?{urllib.parse.urlencode(params)}"
         req = urllib.request.Request(url, headers={"User-Agent": self.user_agent})
         _log.info("fetching arxiv category=%s url=%s", category, url)
-        with urllib.request.urlopen(req, timeout=self.timeout_seconds) as resp:  # noqa: S310
+        with urllib.request.urlopen(req, timeout=self.timeout_seconds) as resp:
             xml_bytes = resp.read()
         yield from parse_atom_feed(xml_bytes)
 
@@ -126,7 +126,7 @@ class ArxivSource(Source):
                 _ARXIV_API + "?search_query=cat:cs.LG&max_results=1",
                 headers={"User-Agent": self.user_agent},
             )
-            with urllib.request.urlopen(req, timeout=self.timeout_seconds) as resp:  # noqa: S310
+            with urllib.request.urlopen(req, timeout=self.timeout_seconds) as resp:
                 return bool(resp.status == 200)
         except Exception:
             _log.exception("arxiv health check failed")
