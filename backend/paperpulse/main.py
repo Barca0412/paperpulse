@@ -21,27 +21,40 @@ from paperpulse.logging_setup import get_logger, setup_logging
 setup_logging()
 _log = get_logger(__name__)
 
+# Module-level anchor cache; populated by lifespan, consumed by filter_paper_l2.
+anchor_cache: object | None = None  # typed loosely to avoid import cycle
+
 
 def _on_config_change(name: str) -> None:
     """Dispatch YAML change events to the filter rescore hooks.
 
-    Runs on whatever thread the watchdog observer uses (blocking for now —
-    L1 rescore is O(papers) text match, fast at corpus sizes relevant to v1).
+    Runs on whatever thread the watchdog observer uses.
     """
     if name == "keywords":
         from paperpulse.filter.pipeline import rescore_l1_all
+
         n = rescore_l1_all()
         _log.info("keywords.yml change → L1 rescored %d papers", n)
+    elif name in ("seeds", "topics"):
+        if anchor_cache is not None:
+            anchor_cache.rebuild()  # type: ignore[attr-defined]
+            _log.info("%s.yml change → anchor cache rebuilt", name)
 
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     from paperpulse import scheduler
     from paperpulse.config import get_store
+    from paperpulse.filter.anchors import AnchorCache
 
     store = get_store()
     store.subscribe(_on_config_change)
     store.start_watching()
+
+    global anchor_cache
+    anchor_cache = AnchorCache(store)
+    anchor_cache.rebuild()
+
     scheduler.start()
     try:
         yield

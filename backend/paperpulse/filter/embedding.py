@@ -35,8 +35,8 @@ class _EmbedBackend(Protocol):
 
 class _OnnxBackend:
     def __init__(self) -> None:
-        import onnxruntime as ort
-        from tokenizers import Tokenizer
+        import onnxruntime as ort  # type: ignore[import-untyped]
+        from tokenizers import Tokenizer  # type: ignore[import-untyped]
 
         model_dir = models_dir() / "bge-m3"
         model_dir.mkdir(parents=True, exist_ok=True)
@@ -81,7 +81,8 @@ class _OnnxBackend:
         emb = outputs[0].astype(np.float32)
         norms = np.linalg.norm(emb, axis=1, keepdims=True)
         norms[norms == 0] = 1
-        return emb / norms
+        normalized: np.ndarray = emb / norms
+        return normalized
 
 
 _backend: _EmbedBackend | None = None
