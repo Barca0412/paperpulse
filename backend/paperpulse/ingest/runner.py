@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 
+from paperpulse.filter.pipeline import filter_paper
 from paperpulse.ingest.base import Source
 from paperpulse.ingest.dedup import record_run, upsert_raw
 
@@ -21,9 +22,13 @@ def run_source(source: Source) -> tuple[int, int]:
     try:
         for raw in source.fetch():
             fetched += 1
-            _, is_new = upsert_raw(raw)
+            pid, is_new = upsert_raw(raw)
             if is_new:
                 new += 1
+                try:
+                    filter_paper(pid)
+                except Exception:
+                    _log.exception("filter pipeline failed for %s", pid)
     except Exception as e:
         _log.exception("ingest run failed for source=%s", source.name)
         error = repr(e)

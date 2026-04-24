@@ -22,12 +22,25 @@ setup_logging()
 _log = get_logger(__name__)
 
 
+def _on_config_change(name: str) -> None:
+    """Dispatch YAML change events to the filter rescore hooks.
+
+    Runs on whatever thread the watchdog observer uses (blocking for now —
+    L1 rescore is O(papers) text match, fast at corpus sizes relevant to v1).
+    """
+    if name == "keywords":
+        from paperpulse.filter.pipeline import rescore_l1_all
+        n = rescore_l1_all()
+        _log.info("keywords.yml change → L1 rescored %d papers", n)
+
+
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     from paperpulse import scheduler
     from paperpulse.config import get_store
 
     store = get_store()
+    store.subscribe(_on_config_change)
     store.start_watching()
     scheduler.start()
     try:

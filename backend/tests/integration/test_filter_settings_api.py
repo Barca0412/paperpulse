@@ -52,6 +52,46 @@ def test_post_keywords_persists_and_reloads(client: TestClient, isolate_runtime:
     assert "foo" in disk and "bar" in disk
 
 
+def test_post_keywords_triggers_l1_rescore(
+    client: TestClient, isolate_runtime: Path
+) -> None:
+    """End-to-end: POSTing new keywords re-scores every paper in the DB."""
+    import datetime as dt
+
+    from paperpulse.db.duckdb_client import fetchall
+    from paperpulse.filter.pipeline import filter_paper_l1
+    from paperpulse.ingest.base import RawPaper
+    from paperpulse.ingest.dedup import upsert_raw
+
+    # Ingest a paper that won't match initial (empty) keywords
+    raw = RawPaper(
+        source="arxiv",
+        source_id="api-rescore-test",
+        arxiv_id="api-rescore-test",
+        title="Deep hedging with RL",
+        abstract="",
+        authors_raw=[{"name": "Test"}],
+        published_at=dt.datetime(2026, 4, 1),
+        updated_at=dt.datetime(2026, 4, 1),
+    )
+    pid, _ = upsert_raw(raw)
+    filter_paper_l1(pid)
+    assert fetchall("SELECT level1_passed FROM papers WHERE id = ?", [pid])[0][0] is False
+
+    # POST new keywords → subscriber should rescore
+    r = client.post(
+        "/api/v1/settings/keywords",
+        json={
+            "positive": {"cs_core": ["deep hedging"], "finance_core": [], "crosscut": []},
+            "strong_negative": [],
+            "weak_negative": [],
+            "immune": [],
+        },
+    )
+    assert r.status_code == 200
+    assert fetchall("SELECT level1_passed FROM papers WHERE id = ?", [pid])[0][0] is True
+
+
 def test_post_keywords_validates_positive_buckets(client: TestClient) -> None:
     # Missing "crosscut" bucket → 422
     r = client.post(
