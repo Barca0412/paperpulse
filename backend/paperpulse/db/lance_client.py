@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-import lancedb
+import lancedb  # type: ignore[import-untyped]
 
 from paperpulse.paths import lancedb_path
 

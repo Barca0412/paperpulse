@@ -50,4 +50,5 @@ def execute(sql: str, params: tuple[Any, ...] | list[Any] | None = None) -> Any:
 
 
 def fetchall(sql: str, params: tuple[Any, ...] | list[Any] | None = None) -> list[tuple[Any, ...]]:
-    return execute(sql, params).fetchall()
+    rows: list[tuple[Any, ...]] = execute(sql, params).fetchall()
+    return rows
