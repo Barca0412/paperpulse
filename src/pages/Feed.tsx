@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useFeed } from "@/hooks/useFeed";
 import { api } from "@/lib/api";
+import { openExternal } from "@/lib/open-url";
 
 export default function Feed() {
   const { state, reload } = useFeed(100);
@@ -108,24 +109,22 @@ export default function Feed() {
                 )}
                 <div className="mt-2 flex gap-2 text-[10px]">
                   {p.html_url && (
-                    <a
-                      className="underline"
-                      href={p.html_url}
-                      target="_blank"
-                      rel="noreferrer"
+                    <button
+                      type="button"
+                      className="underline hover:text-foreground"
+                      onClick={() => openExternal(p.html_url!)}
                     >
                       HTML
-                    </a>
+                    </button>
                   )}
                   {p.pdf_url && (
-                    <a
-                      className="underline"
-                      href={p.pdf_url}
-                      target="_blank"
-                      rel="noreferrer"
+                    <button
+                      type="button"
+                      className="underline hover:text-foreground"
+                      onClick={() => openExternal(p.pdf_url!)}
                     >
                       PDF
-                    </a>
+                    </button>
                   )}
                 </div>
               </li>
