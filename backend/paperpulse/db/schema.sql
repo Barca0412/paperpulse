@@ -153,3 +153,11 @@ CREATE TABLE IF NOT EXISTS config_changes (
     changed_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     diff        TEXT
 );
+
+-- Added Phase 2 PR #2.6: papers that failed OpenAlex+ar5iv affiliation
+-- lookup are queued here for retry (spec §9.2 fallback).
+CREATE TABLE IF NOT EXISTS affiliation_retry_queue (
+    paper_id        TEXT PRIMARY KEY,
+    next_attempt_at TIMESTAMP NOT NULL,
+    attempts        INTEGER DEFAULT 0
+);

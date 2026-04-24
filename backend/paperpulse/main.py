@@ -24,13 +24,16 @@ _log = get_logger(__name__)
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
+    from paperpulse import scheduler
     from paperpulse.config import get_store
 
     store = get_store()
     store.start_watching()
+    scheduler.start()
     try:
         yield
     finally:
+        scheduler.stop()
         store.stop_watching()
 
 
