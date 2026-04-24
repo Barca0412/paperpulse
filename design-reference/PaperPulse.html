@@ -1,0 +1,1961 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PaperPulse · AI × Finance Radar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;600&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+<script>
+tailwind.config = {
+  darkMode: 'class',
+  theme: {
+    extend: {
+      fontFamily: {
+        sans: ['Inter','-apple-system','BlinkMacSystemFont','PingFang SC','Hiragino Sans GB','Noto Sans SC','sans-serif'],
+        mono: ['JetBrains Mono','SFMono-Regular','Menlo','monospace'],
+      },
+      colors: {
+        bg: 'rgb(var(--bg) / <alpha-value>)',
+        fg: 'rgb(var(--fg) / <alpha-value>)',
+        muted: 'rgb(var(--muted) / <alpha-value>)',
+        mutedfg: 'rgb(var(--muted-fg) / <alpha-value>)',
+        card: 'rgb(var(--card) / <alpha-value>)',
+        border: 'rgb(var(--border) / <alpha-value>)',
+        accent: 'rgb(var(--accent) / <alpha-value>)',
+      },
+    }
+  }
+}
+</script>
+<style>
+  :root {
+    --bg: 255 255 255;
+    --fg: 24 28 36;
+    --muted: 244 246 249;
+    --muted-fg: 101 115 135;
+    --card: 255 255 255;
+    --border: 225 230 238;
+    --accent: 237 241 247;
+  }
+  .dark {
+    --bg: 15 19 26;
+    --fg: 230 236 244;
+    --muted: 30 36 47;
+    --muted-fg: 156 168 186;
+    --card: 20 25 33;
+    --border: 38 46 60;
+    --accent: 34 41 54;
+  }
+  html,body,#root { height:100%; }
+  body {
+    font-family: Inter, 'PingFang SC', 'Noto Sans SC', sans-serif;
+    font-feature-settings: "cv11","ss01";
+    background: rgb(var(--bg));
+    color: rgb(var(--fg));
+  }
+  .zh { font-family: 'PingFang SC','Hiragino Sans GB','Noto Sans SC', Inter, sans-serif; }
+  ::-webkit-scrollbar { width:10px; height:10px; }
+  ::-webkit-scrollbar-thumb { background: rgb(var(--muted-fg) / 0.25); border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }
+  ::-webkit-scrollbar-thumb:hover { background: rgb(var(--muted-fg) / 0.45); background-clip: padding-box; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  kbd { font-family: 'JetBrains Mono', monospace; font-size: 10px; padding: 1px 5px; border: 1px solid rgb(var(--border)); border-bottom-width:2px; border-radius: 4px; background: rgb(var(--muted)); }
+  .ppmd h1 { font-size: 1.6rem; font-weight: 700; margin: 1rem 0 0.8rem; }
+  .ppmd h2 { font-size: 1.15rem; font-weight: 600; margin: 1.4rem 0 0.5rem; border-bottom: 1px solid rgb(var(--border)); padding-bottom: 0.3rem; }
+  .ppmd h3 { font-size: 0.95rem; font-weight: 600; margin: 1rem 0 0.3rem; }
+  .ppmd p { margin: 0.5rem 0; line-height: 1.65; color: rgb(var(--fg) / 0.9); }
+  .ppmd ul { list-style: disc; padding-left: 1.25rem; margin: 0.5rem 0; }
+  .ppmd ol { list-style: decimal; padding-left: 1.25rem; margin: 0.5rem 0; }
+  .ppmd li { margin: 0.25rem 0; line-height: 1.55; }
+  .ppmd code { font-family: 'JetBrains Mono', monospace; font-size: 0.85em; background: rgb(var(--muted)); padding: 1px 4px; border-radius: 3px; }
+  .ppmd strong { font-weight: 600; }
+  .ppmd a { color: #0284c7; text-decoration: underline; text-underline-offset: 2px; }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
+<script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useMemo, useRef } = React;
+const { LineChart, Line, AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } = Recharts;
+
+// ═════════════════════════════ MOCK DATA ═════════════════════════════
+const TOPICS = [
+  { slug: 'llm_for_finance', name: 'LLM Agents for Finance', side: 'crosscut', weight: 1.2, descEN: 'Multi-agent LLM systems for trading, analysis, and decision support.', descZH: '用于交易、分析与决策支持的多智能体大模型系统。' },
+  { slug: 'rl_trading', name: 'RL for Trading', side: 'crosscut', weight: 1.1, descEN: 'Reinforcement learning for execution, market making, and portfolios.', descZH: '用于执行、做市与组合管理的强化学习。' },
+  { slug: 'ml_asset_pricing', name: 'ML for Asset Pricing', side: 'finance', weight: 1.0, descEN: 'Machine learning in empirical asset pricing.', descZH: '机器学习在资产定价中的应用。' },
+  { slug: 'agent_simulation', name: 'Agent-Based Simulation', side: 'crosscut', weight: 0.9, descEN: 'Heterogeneous agent markets, ABM for systemic risk.', descZH: '异质主体市场与系统性风险 ABM。' },
+  { slug: 'foundation_models', name: 'Foundation Models', side: 'cs', weight: 0.8, descEN: 'Pretraining, scaling, and evaluation.', descZH: '基础模型预训练、缩放与评测。' },
+  { slug: 'alignment', name: 'Alignment & Safety', side: 'cs', weight: 0.7, descEN: 'RLHF, DPO, constitutional AI.', descZH: '对齐与安全。' },
+  { slug: 'mech_interp', name: 'Mech Interpretability', side: 'cs', weight: 0.6, descEN: 'Circuits, features, SAEs.', descZH: '机制可解释性。' },
+  { slug: 'market_microstructure', name: 'Market Microstructure', side: 'finance', weight: 0.9, descEN: 'LOB, HFT, price impact.', descZH: '市场微观结构。' },
+  { slug: 'risk_regulation', name: 'Risk & Regulation', side: 'finance', weight: 0.7, descEN: 'Stress testing, capital.', descZH: '风险与监管。' },
+  { slug: 'climate_finance', name: 'Climate Finance', side: 'finance', weight: 0.6, descEN: 'Transition risk, green assets.', descZH: '气候金融。' },
+  { slug: 'stablecoins', name: 'Stablecoins & CBDC', side: 'finance', weight: 0.7, descEN: 'Monetary design of crypto.', descZH: '稳定币与央行数字货币。' },
+  { slug: 'macro_ml', name: 'Macro Forecasting', side: 'crosscut', weight: 0.8, descEN: 'Nowcasting with ML.', descZH: '宏观 ML 预测。' },
+];
+const TOPIC_BY_SLUG = Object.fromEntries(TOPICS.map(t => [t.slug, t]));
+
+const INSTITUTIONS = [
+  { id:'stanford', short:'Stanford', name:'Stanford University', flag:'🇺🇸', type:'university', country:'US', whitelisted:true, paper30d:47, rankDelta:+2 },
+  { id:'mit', short:'MIT', name:'Massachusetts Institute of Technology', flag:'🇺🇸', type:'university', country:'US', whitelisted:true, paper30d:52, rankDelta:0 },
+  { id:'berkeley', short:'UC Berkeley', name:'UC Berkeley', flag:'🇺🇸', type:'university', country:'US', whitelisted:true, paper30d:38, rankDelta:-1 },
+  { id:'yale', short:'Yale', name:'Yale School of Management', flag:'🇺🇸', type:'university', country:'US', whitelisted:true, paper30d:22, rankDelta:+1 },
+  { id:'chicago', short:'Chicago Booth', name:'U. Chicago Booth', flag:'🇺🇸', type:'university', country:'US', whitelisted:true, paper30d:18, rankDelta:0 },
+  { id:'cmu', short:'CMU', name:'Carnegie Mellon', flag:'🇺🇸', type:'university', country:'US', whitelisted:true, paper30d:41, rankDelta:+3 },
+  { id:'tsinghua', short:'Tsinghua', name:'清华大学', flag:'🇨🇳', type:'university', country:'CN', whitelisted:true, paper30d:44, rankDelta:+5 },
+  { id:'pku', short:'Peking U.', name:'北京大学', flag:'🇨🇳', type:'university', country:'CN', whitelisted:true, paper30d:31, rankDelta:+2 },
+  { id:'cuhk', short:'CUHK', name:'香港中文大学', flag:'🇭🇰', type:'university', country:'HK', whitelisted:true, paper30d:19, rankDelta:+1 },
+  { id:'hkust', short:'HKUST', name:'香港科技大学', flag:'🇭🇰', type:'university', country:'HK', whitelisted:true, paper30d:24, rankDelta:+2 },
+  { id:'oxford', short:'Oxford', name:'U. Oxford', flag:'🇬🇧', type:'university', country:'UK', whitelisted:true, paper30d:21, rankDelta:-1 },
+  { id:'eth', short:'ETH Zürich', name:'ETH Zürich', flag:'🇨🇭', type:'university', country:'CH', whitelisted:true, paper30d:28, rankDelta:0 },
+  { id:'imperial', short:'Imperial', name:'Imperial College London', flag:'🇬🇧', type:'university', country:'UK', whitelisted:true, paper30d:17, rankDelta:+1 },
+  { id:'ntu', short:'NTU', name:'Nanyang Tech U.', flag:'🇸🇬', type:'university', country:'SG', whitelisted:true, paper30d:15, rankDelta:0 },
+  { id:'deepmind', short:'DeepMind', name:'Google DeepMind', flag:'🇬🇧', type:'industry_lab', country:'UK', whitelisted:true, paper30d:19, rankDelta:+2 },
+  { id:'anthropic', short:'Anthropic', name:'Anthropic', flag:'🇺🇸', type:'industry_lab', country:'US', whitelisted:true, paper30d:12, rankDelta:+4 },
+  { id:'meta_fair', short:'Meta FAIR', name:'Meta AI Research', flag:'🇺🇸', type:'industry_lab', country:'US', whitelisted:true, paper30d:22, rankDelta:-1 },
+  { id:'jpmorgan', short:'JPM AI', name:'JPMorgan AI Research', flag:'🇺🇸', type:'industry_lab', country:'US', whitelisted:true, paper30d:8, rankDelta:+1 },
+  { id:'bridgewater', short:'Bridgewater', name:'Bridgewater Associates', flag:'🇺🇸', type:'industry_lab', country:'US', whitelisted:false, paper30d:4, rankDelta:0 },
+  { id:'ny_fed', short:'NY Fed', name:'Federal Reserve Bank of NY', flag:'🇺🇸', type:'policy', country:'US', whitelisted:true, paper30d:9, rankDelta:0 },
+  { id:'bis', short:'BIS', name:'Bank for Intl. Settlements', flag:'🇨🇭', type:'policy', country:'CH', whitelisted:true, paper30d:7, rankDelta:+1 },
+  { id:'pboc', short:'PBoC', name:'People\u2019s Bank of China', flag:'🇨🇳', type:'policy', country:'CN', whitelisted:true, paper30d:5, rankDelta:+2 },
+];
+const INST_BY_ID = Object.fromEntries(INSTITUTIONS.map(i => [i.id, i]));
+
+const AUTHORS = [
+  { id:'a1', name:'Bryan Kelly', institutionId:'yale', hIndex:52, paper30d:3, tracked:true, topicMix:[{topic:'ml_asset_pricing',pct:62},{topic:'foundation_models',pct:22},{topic:'rl_trading',pct:16}] },
+  { id:'a2', name:'Stefan Nagel', institutionId:'chicago', hIndex:44, paper30d:2, tracked:true, topicMix:[{topic:'ml_asset_pricing',pct:70},{topic:'macro_ml',pct:30}] },
+  { id:'a3', name:'Thomas Laurent', institutionId:'berkeley', hIndex:28, paper30d:4, tracked:true, topicMix:[{topic:'rl_trading',pct:55},{topic:'foundation_models',pct:45}] },
+  { id:'a4', name:'Emma Brunskill', institutionId:'stanford', hIndex:48, paper30d:2, tracked:true, topicMix:[{topic:'rl_trading',pct:60},{topic:'alignment',pct:40}] },
+  { id:'a5', name:'Percy Liang', institutionId:'stanford', hIndex:72, paper30d:3, tracked:true, topicMix:[{topic:'foundation_models',pct:60},{topic:'alignment',pct:40}] },
+  { id:'a6', name:'Yann LeCun', institutionId:'meta_fair', hIndex:140, paper30d:1, tracked:false, topicMix:[{topic:'foundation_models',pct:100}] },
+  { id:'a7', name:'Jianfeng Gao', institutionId:'tsinghua', hIndex:55, paper30d:3, tracked:true, topicMix:[{topic:'llm_for_finance',pct:50},{topic:'foundation_models',pct:50}] },
+  { id:'a8', name:'Marcos López de Prado', institutionId:'cmu', hIndex:48, paper30d:2, tracked:true, topicMix:[{topic:'rl_trading',pct:40},{topic:'ml_asset_pricing',pct:60}] },
+  { id:'a9', name:'Rama Cont', institutionId:'oxford', hIndex:62, paper30d:2, tracked:true, topicMix:[{topic:'market_microstructure',pct:70},{topic:'risk_regulation',pct:30}] },
+  { id:'a10', name:'Álvaro Cartea', institutionId:'oxford', hIndex:45, paper30d:3, tracked:true, topicMix:[{topic:'market_microstructure',pct:60},{topic:'rl_trading',pct:40}] },
+  { id:'a11', name:'Darrell Duffie', institutionId:'stanford', hIndex:85, paper30d:1, tracked:true, topicMix:[{topic:'stablecoins',pct:40},{topic:'market_microstructure',pct:60}] },
+  { id:'a12', name:'Amy Zhang', institutionId:'cmu', hIndex:22, paper30d:2, tracked:false, topicMix:[{topic:'rl_trading',pct:100}] },
+  { id:'a13', name:'Shihao Gu', institutionId:'chicago', hIndex:18, paper30d:2, tracked:false, topicMix:[{topic:'ml_asset_pricing',pct:100}] },
+  { id:'a14', name:'Wei Xiong', institutionId:'pku', hIndex:38, paper30d:1, tracked:true, topicMix:[{topic:'ml_asset_pricing',pct:100}] },
+  { id:'a15', name:'Xiao-Li Meng', institutionId:'tsinghua', hIndex:47, paper30d:2, tracked:false, topicMix:[{topic:'macro_ml',pct:100}] },
+];
+const AUTHOR_BY_ID = Object.fromEntries(AUTHORS.map(a => [a.id, a]));
+
+// Paper generator
+const TITLE_POOL = [
+  'FinAgent-X: A Multi-Agent LLM Framework for Portfolio Rebalancing under Regime Shifts',
+  'Do Large Language Models Understand Earnings Calls? Evidence from 10-K Disclosures',
+  'LOB-GPT: Deep RL for Optimal Execution in Fragmented Markets',
+  'Retrieval-Augmented Reasoning for Macro Nowcasting with Central-Bank Texts',
+  'The Cross-Section of Expected Returns, Revisited: A Transformer-Based Factor Zoo',
+  'Quanta: A Foundation Model for Limit Order Book Dynamics',
+  'Agentic Simulation of Heterogeneous Traders: Calibration on NASDAQ Microdata',
+  'Mechanistic Interpretability of Finance-Tuned LLMs: Circuits for Sentiment',
+  'Stablecoin Runs as Coordination Failures: A Game-Theoretic Deep Learning Approach',
+  'Tail Risk Forecasting with State-Space Transformers on Cross-Country Panels',
+  'AlphaForge: Long-Horizon Factor Timing via Bayesian Neural Operators',
+  'Constitutional AI for Financial Advice: Safety Evaluation on 2k Scenarios',
+  'Transition Risk Pricing in Corporate Bonds: A Climate-Aware Factor Model',
+  'Market Making with Latent Intent: A Partially Observed MDP Framework',
+  'From Earnings Drift to Attention Drift: Retail Flows in an LLM-Attention Era',
+  'MacroBench: Benchmark for Financial Reasoning over Multi-Modal Filings',
+  'Self-Improving Trading Agents via RL from Verifier Feedback',
+  'On the Spurious Correlations of ML Asset Pricing Models: A Causal Audit',
+  'Central Bank Communication as a Nonlinear Macro Shock: A BERT-VAR Approach',
+  'Liquidity Provision with Attention: Transformers in High-Frequency Trading',
+  'FactorMind: Sparse Autoencoders Recover Factor Structure in Large Panels',
+  'Systemic Stablecoin Risk: Network Spillovers via a Graph Attention Model',
+  'Forecasting FX with News Embeddings: A 28-Currency Out-of-Sample Study',
+  'Distributional RL for Drawdown-Aware Portfolio Construction',
+  'The Price of Interpretability: A Regulated Benchmark for Credit Scoring',
+  'SignalFlow: Synthetic Time Series for Asset Pricing via Diffusion Models',
+  'Collusion in Algorithmic Market Making: An LLM-Agent Experiment',
+  'Macroprudential Policy as Constrained Optimization over Agent Populations',
+  'Large-Scale Multi-Task Learning of Return Predictors across 160 Anomalies',
+  'A Compositional Benchmark for Quantitative Reasoning in Finance LLMs',
+  'CreditLM: Continual Pretraining on Central-Bank Transcripts',
+  'Inflation Expectations from Social Media: Embedding-Based Extraction',
+  'Retail Sentiment Shocks and Momentum: A Causal Forest Analysis',
+  'Do Bigger Models Price Better? Scaling Laws for Factor Models',
+  'Cross-Modal Pretraining with Charts, Filings, and Prices',
+];
+
+const TLDR_EN = [
+  'Four Claude-3 agents (macro, factor, risk, executor) negotiate allocation at each rebalance; beats 60/40 by 2.1% Sharpe on 2019-2025 sample.',
+  'Fine-tunes Llama-3-70B on 12k earnings transcripts; matches analyst upgrade/downgrade signals with 0.71 AUC.',
+  'Policy-gradient agent jointly decides venue routing and child order size; halves TCA slippage vs TWAP on 3M sample.',
+  'Embeds FOMC / ECB statements and retrieves nearest historical macro episode; gains on GDP nowcast RMSE.',
+  'A transformer learns a latent factor space from returns & chars, subsumes Fama-French-5 out-of-sample.',
+  'Pretrains a 400M-param model on 18-level LOB snapshots; predicts spread & depth with strong OOS performance.',
+  'Simulator with three trader types (momentum, fundamental, liquidity) calibrated to NASDAQ; reproduces volatility clustering.',
+  'Identifies SAE features in FinBERT that causally drive sentiment logits, enabling auditable score attribution.',
+  'Models a stablecoin as coordination game with DL best-response learner; isolates conditions for depeg.',
+  'S4 state-space model outperforms GARCH and CAViaR on tail VaR across 22 countries.',
+  'Bayesian neural operator for time-varying factor loadings; 15% Sharpe gain on US long-short.',
+  'Red-teams GPT-4-finance on 2k advice scenarios; failure modes cluster on volatility & tax edge cases.',
+  'Integrates carbon transition paths into factor model; green bonds earn significant 0.4% alpha post-2020.',
+  'POMDP with latent intent improves MM PnL 18% vs naive inventory agent.',
+  'Retail call-option flow predicts next-day returns once adjusted for LLM-measured firm attention.',
+  'Open benchmark for 8k questions over SEC filings, PDF tables, and charts; strong Claude result.',
+  'Trader agent critiques its own trades via verifier; improves Sharpe over multi-month rollouts.',
+  'Causal graph audit shows 30% of "factors" in recent ML-AP papers reduce to trade-date leakage.',
+  'BERT-embedded ECB minutes drive a VAR; shocks have richer non-linear effects on EUR and bund yields.',
+  'Small transformer MM beats classical Avellaneda-Stoikov at 100ms latency on toy LOB.',
+  'SAEs on a 2-factor model extract sparse directions matching known risk premia.',
+  'GAT over issuer-bank edges predicts stablecoin contagion under stress scenarios.',
+  'News-embedding signals generalize OOS across 28 currencies, most strongly in EMs.',
+  'C51-style agent optimizes left-tail utility; 12% lower max-DD vs Markowitz.',
+  'Benchmark asking: how much performance do you lose if the model must be monotonic?',
+  'Diffusion model for synthetic return paths preserves volatility clustering & leverage effect.',
+  'LLM market makers appear to tacitly collude; reminds of algorithmic price-fixing literature.',
+  'Regulator sets capital as constrained optimization over heterogeneous bank agents.',
+  'Shared encoder, 160 anomaly heads; beats single-task by 6% Sharpe on US equity.',
+  'Compositional reasoning benchmark; current frontier models solve 52% vs human 94%.',
+  'Continual pretraining on Fed speeches lifts macro-question accuracy by 9 pp.',
+  'Retrieves Reddit posts to estimate breakeven inflation; beats TIPS alone in recent months.',
+  'Heteroskedastic causal forest isolates attention spikes as momentum driver.',
+  'Power-law scaling holds for ML factor models up to 1B params; plateaus afterward.',
+  'Jointly trains a vision-text-numeric encoder on 100k financial artifacts.',
+];
+
+const TLDR_ZH = [
+  '四个 Claude 子智能体（宏观、因子、风险、执行）在每次再平衡时协商仓位；2019-2025 样本上相比 60/40 组合提升夏普 2.1 个百分点。',
+  '在 1.2 万份业绩会纪要上微调 Llama-3-70B，预测分析师升降级 AUC 达 0.71。',
+  '策略梯度同时决定下单场所与子单大小；实盘样本 TCA 滑点较 TWAP 减半。',
+  '嵌入 FOMC/ECB 声明并检索历史宏观情境，GDP 即时预测 RMSE 显著降低。',
+  'Transformer 从收益与公司特征学到潜在因子空间，在 OOS 样本上涵盖 Fama-French-5。',
+  '在 18 层订单簿快照上预训练 400M 模型，预测价差与深度 OOS 表现强劲。',
+  '动量、基本面、流动性三类交易者校准于 NASDAQ，复现波动率聚集。',
+  '在 FinBERT 上用 SAE 识别出因果驱动情感打分的特征，可做审计。',
+  '把稳定币建模为协调博弈，隔离出脱锚发生的条件。',
+  '状态空间 S4 在 22 国样本上压过 GARCH 与 CAViaR。',
+  '贝叶斯神经算子估计时变因子暴露；美股多空策略夏普提升 15%。',
+  '对 GPT-4-finance 做 2k 场景红队测试；失效集中在波动率与税务边缘情形。',
+  '将碳转型路径嵌入因子模型，2020 后绿色债券获得显著 0.4% Alpha。',
+  'POMDP 做市策略相比朴素库存策略 PnL 提升 18%。',
+  '调整 LLM 衡量的公司关注度后，散户期权流可预测次日收益。',
+  '覆盖 SEC 文件/表格/图表的 8k 题开放基准；Claude 表现强劲。',
+  '交易者智能体用验证器自我批评，长周期夏普持续提升。',
+  '因果图审计显示最近 30% 的"因子"其实源于交易日泄漏。',
+  'BERT 化 ECB 纪要驱动 VAR，冲击对欧元与德债收益率呈非线性效应。',
+  '小型 Transformer 做市策略在 100ms 延迟下击败经典 Avellaneda-Stoikov。',
+  '稀疏自编码器从 2 因子模型中提取匹配已知风险溢价的方向。',
+  '基于发行人-银行图的 GAT 可预测压力情形下稳定币传染。',
+  '新闻嵌入信号在 28 个货币上 OOS 稳健，新兴市场最强。',
+  'C51 分布 RL 优化左尾效用，最大回撤较马科维茨降低 12%。',
+  '研究模型若必须单调，会损失多少表现。',
+  '扩散模型生成的合成收益序列保留波动聚集与杠杆效应。',
+  'LLM 做市商出现默契串谋，与算法价格共谋文献呼应。',
+  '把监管资本作为异质银行智能体约束优化问题。',
+  '共享编码器 + 160 个异常头；较单任务提升 6% 夏普。',
+  '组合推理基准；前沿模型 52%，人类 94%。',
+  '对联储讲话做持续预训练，宏观题目准确率提升 9 个百分点。',
+  '检索 Reddit 帖子估计通胀预期，近期跑赢 TIPS。',
+  '异方差因果森林将关注度峰值识别为动量驱动因素。',
+  '最多到 10 亿参数，ML 因子模型尚遵循幂律缩放，此后停滞。',
+  '联合训练视觉-文本-数值编码器，共 10 万份金融文物。',
+];
+
+const seed = (function(){let s=2601; return ()=>{s=(s*9301+49297)%233280;return s/233280}})();
+
+function makePapers() {
+  const papers = [];
+  const now = Date.now();
+  for (let i = 0; i < 64; i++) {
+    const daysAgo = Math.floor(seed() * 32);
+    const d = new Date(now - daysAgo * 86400000);
+    const titleIdx = i % TITLE_POOL.length;
+    const authorSet = Array.from({length: 2 + Math.floor(seed()*3)}, () => AUTHORS[Math.floor(seed()*AUTHORS.length)]);
+    const uniqAuths = Array.from(new Map(authorSet.map(a => [a.id, a])).values());
+    const topicSet = Array.from(new Set([TOPICS[Math.floor(seed()*TOPICS.length)].slug, TOPICS[Math.floor(seed()*TOPICS.length)].slug])).slice(0,3);
+    const relevance = +(3 + seed()*7).toFixed(1);
+    const tier = relevance > 7.5 ? 'A' : relevance > 5.5 ? 'B' : 'C';
+    const hasCode = seed() > 0.55;
+    const hfDaily = seed() > 0.82;
+    const trackedAuthor = uniqAuths.some(a => a.tracked);
+    const sources = ['arxiv','ssrn','crossref','s2','hf'];
+    papers.push({
+      id: 'p' + i,
+      title: TITLE_POOL[titleIdx],
+      tldrEN: TLDR_EN[titleIdx],
+      tldrZH: TLDR_ZH[titleIdx],
+      authors: uniqAuths.map(a => ({ name: a.name, institutionId: a.institutionId, authorId: a.id })),
+      date: d.toISOString(),
+      tier,
+      topics: topicSet,
+      source: sources[Math.floor(seed()*sources.length)],
+      venue: 'arXiv',
+      arxivId: 'arXiv:260' + (4 + Math.floor(seed()*2)) + '.' + (10000 + Math.floor(seed()*9000)),
+      relevance,
+      citationsPerWeek: Math.floor(seed() * 30),
+      hasCode,
+      hfDaily,
+      trackedAuthor,
+      status: seed() > 0.9 ? 'saved' : seed() > 0.93 ? 'must_read' : 'unread',
+      pdfUrl: '#',
+    });
+  }
+  return papers.sort((a,b) => b.date.localeCompare(a.date));
+}
+
+const CONFERENCES = [
+  { id:'nips', name:'NeurIPS', year:2026, location:'Vancouver, Canada', startDate:'2026-12-07', endDate:'2026-12-13', abstractDeadline:'2026-05-15', paperDeadline:'2026-05-22', authorResponse:'2026-08-04', decision:'2026-09-26', verification:'verified', topics:['ML','Deep Learning'], relatedPapers:142, url:'#' },
+  { id:'icml', name:'ICML', year:2026, location:'Seoul, South Korea', startDate:'2026-07-19', endDate:'2026-07-25', paperDeadline:'2026-01-30', decision:'2026-05-01', verification:'verified', topics:['ML'], relatedPapers:98, url:'#' },
+  { id:'iclr', name:'ICLR', year:2026, location:'Virtual', startDate:'2026-05-03', endDate:'2026-05-07', paperDeadline:'2025-09-28', verification:'verified', topics:['Deep Learning'], relatedPapers:73, url:'#' },
+  { id:'wfa', name:'WFA', year:2026, location:'Boston, MA', startDate:'2026-06-24', endDate:'2026-06-27', paperDeadline:'2026-01-15', verification:'verified', topics:['Finance'], relatedPapers:22, url:'#' },
+  { id:'afa', name:'AFA', year:2027, location:'Atlanta, GA', startDate:'2027-01-03', endDate:'2027-01-05', paperDeadline:'2026-08-15', verification:'needs_review', topics:['Finance'], relatedPapers:41, url:'#' },
+  { id:'emnlp', name:'EMNLP', year:2026, location:'Suzhou, China', startDate:'2026-11-09', endDate:'2026-11-13', paperDeadline:'2026-06-15', verification:'verified', topics:['NLP'], relatedPapers:34, url:'#' },
+  { id:'naacl', name:'NAACL', year:2027, location:'San Diego, CA', startDate:'2027-04-28', endDate:'2027-05-02', paperDeadline:'2026-10-15', verification:'single_source', topics:['NLP'], relatedPapers:12, url:'#' },
+  { id:'fmacc', name:'FMA Annual', year:2026, location:'New Orleans, LA', startDate:'2026-10-22', endDate:'2026-10-24', paperDeadline:'2026-04-30', verification:'manual', topics:['Finance'], relatedPapers:18, url:'#' },
+];
+
+const DIGEST_MD = `# Weekly Digest · 2026 W17
+**Apr 20 → Apr 26, 2026** · 87 papers ingested · 6 Tier A · 18 Tier B
+
+## 💡 本周五大关注 · Top 5 picks
+
+### 1. FinAgent-X: A Multi-Agent LLM Framework for Portfolio Rebalancing
+**Bryan Kelly (Yale), Stefan Nagel (Chicago Booth)** · \`arXiv:2604.13502\` · Tier A
+四个 Claude 子智能体（宏观、因子、风险、执行）在每次再平衡时协商仓位；2019-2025 样本上相比 60/40 组合提升夏普 2.1 个百分点。The architecture decouples valuation from execution which is unusual and makes the whole pipeline very easy to audit.
+
+### 2. LOB-GPT: Deep RL for Optimal Execution
+**Álvaro Cartea (Oxford), Rama Cont (Oxford)** · \`arXiv:2604.11028\` · Tier A
+策略梯度同时决定下单场所与子单大小；实盘样本 TCA 滑点较 TWAP 减半。代码已开源，可直接复现。
+
+### 3. Mech Interp of Finance-Tuned LLMs: Circuits for Sentiment
+**Emma Brunskill (Stanford), Percy Liang (Stanford)** · Tier A
+在 FinBERT 上用 SAE 识别出因果驱动情感打分的特征。对做合规审计有直接应用价值。
+
+### 4. On the Spurious Correlations of ML Asset Pricing Models
+**Marcos López de Prado (CMU)** · Tier A
+因果图审计显示最近 30% 的"因子"其实源于交易日泄漏。**读了可能会很刺痛，但必须读。**
+
+### 5. Stablecoin Runs as Coordination Failures
+**Darrell Duffie (Stanford)** · Tier A
+把稳定币建模为协调博弈；给出脱锚发生的条件。政策侧意义明显。
+
+## 📈 Topic heat this week
+- **LLM for Finance**: +41% WoW — the big story. 8 new papers, 3 Tier A.
+- **RL for Trading**: +18% — steady growth.
+- **Mech Interpretability**: +62% but small base.
+- **Stablecoins**: -12% — quieter week.
+
+## 👀 New from tracked authors
+- **Bryan Kelly** shipped 2 papers · both Tier A.
+- **Álvaro Cartea** shipped 1 Tier A.
+- **Rama Cont**, **Percy Liang**, **Jianfeng Gao** — 1 each.
+
+## 📅 Deadlines you care about
+- **NeurIPS 2026** · abstract \`May 15\` · paper \`May 22\` · **<30 days**
+- **FMA Annual 2026** · paper \`Apr 30\` · **7 days** · ⚠️ verify
+
+## 📚 Reading progress
+34 papers reviewed this week · 8 saved · 3 marked must-read · 12 ignored. 继续保持。
+`;
+
+// ═════════════════════════════ UTILS ═════════════════════════════
+function cn(...xs) { return xs.filter(Boolean).join(' '); }
+function relativeDate(iso) {
+  const diff = Math.round((Date.now() - new Date(iso).getTime()) / 86400000);
+  if (diff === 0) return 'today';
+  if (diff === 1) return 'yesterday';
+  if (diff < 7) return diff + 'd ago';
+  if (diff < 30) return Math.floor(diff/7) + 'w ago';
+  return new Date(iso).toISOString().slice(0,10);
+}
+function shortDate(iso) {
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+function daysAway(iso) {
+  return Math.round((new Date(iso).getTime() - Date.now()) / 86400000);
+}
+
+// ═════════════════════════════ UI PRIMITIVES ═════════════════════════════
+function Badge({ children, variant = 'default', className = '' }) {
+  const styles = {
+    default: 'bg-fg/10 text-fg/80 border border-fg/10',
+    secondary: 'bg-muted text-fg/80 border border-border',
+    outline: 'border border-border text-fg/70',
+    tierA: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30',
+    tierB: 'bg-sky-500/15 text-sky-700 dark:text-sky-400 border border-sky-500/30',
+    tierC: 'bg-slate-500/15 text-mutedfg border border-slate-500/30',
+    finance: 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30',
+    cs: 'bg-violet-500/15 text-violet-700 dark:text-violet-400 border border-violet-500/30',
+    crosscut: 'bg-teal-500/15 text-teal-700 dark:text-teal-400 border border-teal-500/30',
+  };
+  return <span className={cn('inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium leading-none', styles[variant] || styles.default, className)}>{children}</span>;
+}
+
+function Button({ children, variant = 'default', size = 'md', onClick, className = '', as = 'button', href, disabled, title }) {
+  const variants = {
+    default: 'bg-fg text-bg hover:bg-fg/90',
+    outline: 'border border-border bg-card hover:bg-accent',
+    ghost: 'hover:bg-accent',
+    secondary: 'bg-muted hover:bg-muted/70',
+    destructive: 'bg-rose-500 text-white hover:bg-rose-600',
+  };
+  const sizes = { sm: 'h-7 px-2 text-[11px] gap-1', md: 'h-8 px-3 text-xs gap-1.5', lg: 'h-9 px-4 text-sm gap-2' };
+  const cls = cn('inline-flex items-center justify-center rounded-md font-medium transition-colors whitespace-nowrap', variants[variant], sizes[size], disabled && 'opacity-50 pointer-events-none', className);
+  if (as === 'a' || href) return <a href={href || '#'} className={cls} title={title} onClick={e => { if (href === '#' || !href) { e.preventDefault(); onClick && onClick(e); } }}>{children}</a>;
+  return <button className={cls} onClick={onClick} disabled={disabled} title={title}>{children}</button>;
+}
+
+function Input({ className = '', ...rest }) {
+  return <input className={cn('h-8 px-2 rounded-md border border-border bg-card text-xs outline-none focus:ring-1 focus:ring-fg/30', className)} {...rest} />;
+}
+function Textarea({ className = '', ...rest }) {
+  return <textarea className={cn('px-2 py-1.5 rounded-md border border-border bg-card text-xs outline-none focus:ring-1 focus:ring-fg/30 w-full', className)} {...rest} />;
+}
+function Switch({ checked, onChange }) {
+  return (
+    <button onClick={() => onChange && onChange(!checked)} className={cn('w-8 h-4 rounded-full transition-colors relative', checked ? 'bg-emerald-500' : 'bg-muted border border-border')}>
+      <span className={cn('absolute top-[1px] h-3 w-3 rounded-full bg-white shadow transition-transform', checked ? 'translate-x-[17px]' : 'translate-x-[1px]')} />
+    </button>
+  );
+}
+function Checkbox({ checked, onChange }) {
+  return (
+    <button onClick={() => onChange && onChange(!checked)} className={cn('h-3.5 w-3.5 rounded border flex items-center justify-center', checked ? 'bg-fg border-fg text-bg' : 'border-border bg-card')}>
+      {checked && <span className="text-[10px] leading-none">✓</span>}
+    </button>
+  );
+}
+function Slider({ min=0, max=10, step=0.1, value, onChange }) {
+  return <input type="range" min={min} max={max} step={step} value={value} onChange={e => onChange && onChange(+e.target.value)} className="w-full accent-fg" />;
+}
+function Card({ children, className = '' }) {
+  return <div className={cn('rounded-lg border border-border bg-card', className)}>{children}</div>;
+}
+
+// Lucide-style inline SVG icons (hand-picked)
+const Icon = {
+  Search: (p) => <svg viewBox="0 0 24 24" width={p.s||14} height={p.s||14} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>,
+  Bookmark: (p) => <svg viewBox="0 0 24 24" width={p.s||14} height={p.s||14} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>,
+  BookmarkCheck: (p) => <svg viewBox="0 0 24 24" width={p.s||14} height={p.s||14} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/><path d="m9 10 2 2 4-4"/></svg>,
+  X: (p) => <svg viewBox="0 0 24 24" width={p.s||14} height={p.s||14} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>,
+  Star: (p) => <svg viewBox="0 0 24 24" width={p.s||14} height={p.s||14} fill="currentColor" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" {...p}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
+  Trend: (p) => <svg viewBox="0 0 24 24" width={p.s||14} height={p.s||14} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>,
+  Code: (p) => <svg viewBox="0 0 24 24" width={p.s||14} height={p.s||14} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>,
+  Flame: (p) => <svg viewBox="0 0 24 24" width={p.s||14} height={p.s||14} fill="currentColor" stroke="currentColor" strokeWidth="1" strokeLinejoin="round" {...p}><path d="M8.5 14.5A2.5 2.5 0 0 0 11 17c1.5 0 3-1.5 3-3 0-3.5-4-3.5-4-7 0-1.5.5-2.5 1.5-3 0 2 1.5 3 3 4.5 1 .5 2 2 2 3.5a7 7 0 1 1-14 0c0-2 .5-3.5 2-5 0 2 .5 3.5 2 4z"/></svg>,
+  UserCheck: (p) => <svg viewBox="0 0 24 24" width={p.s||14} height={p.s||14} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>,
+  AlertCircle: (p) => <svg viewBox="0 0 24 24" width={p.s||14} height={p.s||14} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>,
+  ExternalLink: (p) => <svg viewBox="0 0 24 24" width={p.s||14} height={p.s||14} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>,
+  Newspaper: (p) => <svg viewBox="0 0 24 24" width={p.s||14} height={p.s||14} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg>,
+  Bar: (p) => <svg viewBox="0 0 24 24" width={p.s||14} height={p.s||14} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>,
+  Network: (p) => <svg viewBox="0 0 24 24" width={p.s||14} height={p.s||14} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><rect x="16" y="16" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="9" y="2" width="6" height="6" rx="1"/><path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"/><path d="M12 12V8"/></svg>,
+  Cap: (p) => <svg viewBox="0 0 24 24" width={p.s||14} height={p.s||14} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.7 3 3 6 3s6-1.3 6-3v-5"/></svg>,
+  FileText: (p) => <svg viewBox="0 0 24 24" width={p.s||14} height={p.s||14} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>,
+  Building: (p) => <svg viewBox="0 0 24 24" width={p.s||14} height={p.s||14} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01"/></svg>,
+  Users: (p) => <svg viewBox="0 0 24 24" width={p.s||14} height={p.s||14} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+  Settings: (p) => <svg viewBox="0 0 24 24" width={p.s||14} height={p.s||14} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33h.0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
+  Moon: (p) => <svg viewBox="0 0 24 24" width={p.s||14} height={p.s||14} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>,
+  Sun: (p) => <svg viewBox="0 0 24 24" width={p.s||14} height={p.s||14} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>,
+  Calendar: (p) => <svg viewBox="0 0 24 24" width={p.s||14} height={p.s||14} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>,
+  ChevronDown: (p) => <svg viewBox="0 0 24 24" width={p.s||14} height={p.s||14} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><polyline points="6 9 12 15 18 9"/></svg>,
+  ChevronRight: (p) => <svg viewBox="0 0 24 24" width={p.s||14} height={p.s||14} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><polyline points="9 18 15 12 9 6"/></svg>,
+  Check: (p) => <svg viewBox="0 0 24 24" width={p.s||14} height={p.s||14} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><polyline points="20 6 9 17 4 12"/></svg>,
+  Warn: (p) => <svg viewBox="0 0 24 24" width={p.s||14} height={p.s||14} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
+  Help: (p) => <svg viewBox="0 0 24 24" width={p.s||14} height={p.s||14} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
+  Cmd: (p) => <svg viewBox="0 0 24 24" width={p.s||14} height={p.s||14} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M18 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3H6a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3h12a3 3 0 0 0 3-3 3 3 0 0 0-3-3z"/></svg>,
+  MapPin: (p) => <svg viewBox="0 0 24 24" width={p.s||14} height={p.s||14} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>,
+  Download: (p) => <svg viewBox="0 0 24 24" width={p.s||14} height={p.s||14} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>,
+  Copy: (p) => <svg viewBox="0 0 24 24" width={p.s||14} height={p.s||14} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>,
+  Share: (p) => <svg viewBox="0 0 24 24" width={p.s||14} height={p.s||14} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>,
+  Play: (p) => <svg viewBox="0 0 24 24" width={p.s||14} height={p.s||14} fill="currentColor" stroke="currentColor" strokeWidth="1" strokeLinejoin="round" {...p}><polygon points="5 3 19 12 5 21 5 3"/></svg>,
+  Plus: (p) => <svg viewBox="0 0 24 24" width={p.s||14} height={p.s||14} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
+  Trash: (p) => <svg viewBox="0 0 24 24" width={p.s||14} height={p.s||14} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>,
+  Refresh: (p) => <svg viewBox="0 0 24 24" width={p.s||14} height={p.s||14} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>,
+  Globe: (p) => <svg viewBox="0 0 24 24" width={p.s||14} height={p.s||14} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>,
+  Bell: (p) => <svg viewBox="0 0 24 24" width={p.s||14} height={p.s||14} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>,
+};
+
+// ═════════════════════════════ APP SHELL ═════════════════════════════
+function App() {
+  const [route, setRoute] = useState('feed');
+  const [dark, setDark] = useState(true);
+  const [cmdOpen, setCmdOpen] = useState(false);
+  const [papers] = useState(() => makePapers());
+  const [papersState, setPapersState] = useState(papers);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', dark);
+  }, [dark]);
+  useEffect(() => {
+    const onKey = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); setCmdOpen(true); }
+      if (e.key === 'Escape') setCmdOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  const setPaperStatus = (id, status) => setPapersState(s => s.map(p => p.id === id ? { ...p, status } : p));
+
+  const pages = {
+    feed: <Feed papers={papersState} setStatus={setPaperStatus} />,
+    explore: <Explore papers={papersState} />,
+    dashboard: <Dashboard papers={papersState} />,
+    network: <Network papers={papersState} />,
+    conferences: <Conferences />,
+    digest: <Digest />,
+    institutions: <Institutions />,
+    authors: <Authors papers={papersState} />,
+    settings: <Settings />,
+  };
+
+  return (
+    <div className="h-full flex flex-col">
+      <TopBar dark={dark} setDark={setDark} setCmdOpen={setCmdOpen} />
+      <div className="flex flex-1 min-h-0">
+        <SideNav route={route} setRoute={setRoute} />
+        <main className="flex-1 min-w-0 overflow-hidden">
+          {pages[route]}
+        </main>
+      </div>
+      <StatusBar papers={papersState} />
+      {cmdOpen && <CommandPalette onClose={() => setCmdOpen(false)} setRoute={(r) => { setRoute(r); setCmdOpen(false); }} papers={papersState} />}
+    </div>
+  );
+}
+
+function TopBar({ dark, setDark, setCmdOpen }) {
+  return (
+    <div className="h-11 shrink-0 border-b border-border flex items-center px-3 gap-3 bg-card/50 backdrop-blur">
+      <div className="flex items-center gap-2">
+        <div className="h-6 w-6 rounded-md bg-gradient-to-br from-rose-500 via-amber-500 to-sky-500 shadow-inner flex items-center justify-center">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        </div>
+        <span className="font-semibold text-sm tracking-tight">PaperPulse</span>
+        <span className="text-[10px] text-mutedfg font-mono px-1.5 py-0.5 rounded bg-muted border border-border">v0.8.3</span>
+      </div>
+      <button onClick={() => setCmdOpen(true)} className="ml-4 flex-1 max-w-xl h-7 rounded-md border border-border bg-muted hover:bg-accent px-2.5 flex items-center gap-2 text-xs text-mutedfg">
+        <Icon.Search /> <span>Search papers, authors, institutions…</span>
+        <span className="ml-auto text-[10px]"><kbd>⌘</kbd> <kbd>K</kbd></span>
+      </button>
+      <div className="ml-auto flex items-center gap-1.5">
+        <Button size="sm" variant="ghost" title="Toggle dark mode" onClick={() => setDark(!dark)}>
+          {dark ? <Icon.Sun /> : <Icon.Moon />}
+        </Button>
+        <Button size="sm" variant="ghost" title="Notifications">
+          <Icon.Bell />
+          <span className="ml-0.5 text-[9px] px-1 rounded-full bg-rose-500 text-white font-mono">3</span>
+        </Button>
+        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-sky-500 to-violet-600 flex items-center justify-center text-white text-[11px] font-semibold">QF</div>
+      </div>
+    </div>
+  );
+}
+
+function SideNav({ route, setRoute }) {
+  const main = [
+    { id:'feed', icon: Icon.Newspaper, label:'Feed', count:64 },
+    { id:'explore', icon: Icon.Search, label:'Explore' },
+    { id:'dashboard', icon: Icon.Bar, label:'Dashboard' },
+    { id:'network', icon: Icon.Network, label:'Network' },
+    { id:'conferences', icon: Icon.Cap, label:'Conferences' },
+    { id:'digest', icon: Icon.FileText, label:'Weekly Digest' },
+  ];
+  const lib = [
+    { id:'institutions', icon: Icon.Building, label:'Institutions' },
+    { id:'authors', icon: Icon.Users, label:'Authors' },
+  ];
+  const item = (it) => (
+    <button key={it.id} onClick={() => setRoute(it.id)}
+      className={cn('flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[13px] transition-colors w-full text-left',
+        route === it.id ? 'bg-accent text-fg font-medium' : 'text-fg/70 hover:bg-accent/60')}>
+      <it.icon />
+      <span className="flex-1">{it.label}</span>
+      {it.count != null && <span className="text-[10px] font-mono text-mutedfg">{it.count}</span>}
+    </button>
+  );
+  return (
+    <aside className="w-56 shrink-0 border-r border-border bg-muted/30 flex flex-col">
+      <nav className="p-2 space-y-0.5">{main.map(item)}</nav>
+      <div className="px-3 pt-2 pb-1 text-[10px] uppercase tracking-wider font-semibold text-mutedfg">Library</div>
+      <nav className="p-2 pt-0 space-y-0.5">{lib.map(item)}</nav>
+      <div className="mt-auto p-2 border-t border-border">
+        <button onClick={() => setRoute('settings')}
+          className={cn('flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[13px] w-full text-left',
+            route === 'settings' ? 'bg-accent font-medium' : 'hover:bg-accent/60 text-fg/70')}>
+          <Icon.Settings /> Settings
+        </button>
+      </div>
+    </aside>
+  );
+}
+
+function StatusBar({ papers }) {
+  return (
+    <div className="h-6 shrink-0 border-t border-border bg-card/60 flex items-center gap-4 px-3 text-[10px] font-mono text-mutedfg">
+      <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"/> All services up</span>
+      <span>Last ingest · 12 min ago</span>
+      <span>{papers.length} papers</span>
+      <span className="ml-auto flex items-center gap-2">
+        <span>Next digest · Mon 09:00 CST</span>
+        <span>·</span>
+        <span>LLM · claude-sonnet-4-5</span>
+        <span>·</span>
+        <span className="text-emerald-500">$42.81/mo</span>
+      </span>
+    </div>
+  );
+}
+
+// ═════════════════════════════ COMMAND PALETTE ═════════════════════════════
+function CommandPalette({ onClose, setRoute, papers }) {
+  const [q, setQ] = useState('');
+  const items = [
+    { section:'Quick actions', list:[
+      { label:'Go to Feed', icon: Icon.Newspaper, fn:()=>setRoute('feed') },
+      { label:'Go to Dashboard', icon: Icon.Bar, fn:()=>setRoute('dashboard') },
+      { label:'Go to Settings', icon: Icon.Settings, fn:()=>setRoute('settings') },
+      { label:'Run ingest now', icon: Icon.Refresh, fn:onClose },
+      { label:'Generate weekly digest', icon: Icon.FileText, fn:onClose },
+    ]},
+    { section:'Recent papers', list: papers.slice(0,6).map(p => ({ label: p.title, icon: Icon.Search, fn: ()=>setRoute('feed') })) },
+    { section:'Tracked authors', list: AUTHORS.filter(a => a.tracked).slice(0,5).map(a => ({ label: a.name, icon: Icon.Users, fn: ()=>setRoute('authors') })) },
+  ];
+  const filtered = items.map(s => ({ ...s, list: s.list.filter(i => !q || i.label.toLowerCase().includes(q.toLowerCase())) })).filter(s => s.list.length);
+  return (
+    <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm flex items-start justify-center pt-[15vh]" onClick={onClose}>
+      <div className="w-full max-w-xl bg-card rounded-xl border border-border shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
+          <Icon.Search />
+          <input autoFocus value={q} onChange={e => setQ(e.target.value)} placeholder="Search papers, authors, institutions…" className="flex-1 bg-transparent outline-none text-sm" />
+          <kbd>Esc</kbd>
+        </div>
+        <div className="max-h-[400px] overflow-y-auto p-1">
+          {filtered.length === 0 && <div className="p-8 text-center text-sm text-mutedfg">No results.</div>}
+          {filtered.map(s => (
+            <div key={s.section} className="p-1">
+              <div className="text-[10px] uppercase tracking-wider font-semibold text-mutedfg px-2 py-1">{s.section}</div>
+              {s.list.map((it, i) => (
+                <button key={i} onClick={it.fn} className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-accent text-xs text-left">
+                  <it.icon /> <span className="truncate flex-1">{it.label}</span>
+                </button>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═════════════════════════════ FEED ═════════════════════════════
+function Feed({ papers, setStatus }) {
+  const [filters, setFilters] = useState({ tier: [], status: [], topics: [], institutions: [], hasCode: false, hfDaily: false, trackedAuthor: false, relevanceMin: 0, query: '' });
+  const [sort, setSort] = useState('date_desc');
+  const [selected, setSelected] = useState(null);
+  const [expanded, setExpanded] = useState(new Set());
+  const setF = (k, v) => setFilters(s => ({ ...s, [k]: v }));
+  const resetF = () => setFilters({ tier: [], status: [], topics: [], institutions: [], hasCode: false, hfDaily: false, trackedAuthor: false, relevanceMin: 0, query: '' });
+
+  const visible = useMemo(() => {
+    let out = papers.slice();
+    if (filters.tier.length) out = out.filter(p => filters.tier.includes(p.tier));
+    if (filters.status.length) out = out.filter(p => filters.status.includes(p.status));
+    if (filters.topics.length) out = out.filter(p => p.topics.some(t => filters.topics.includes(t)));
+    if (filters.hasCode) out = out.filter(p => p.hasCode);
+    if (filters.hfDaily) out = out.filter(p => p.hfDaily);
+    if (filters.trackedAuthor) out = out.filter(p => p.trackedAuthor);
+    if (filters.relevanceMin > 0) out = out.filter(p => p.relevance >= filters.relevanceMin);
+    if (filters.query.trim()) {
+      const q = filters.query.toLowerCase();
+      out = out.filter(p => p.title.toLowerCase().includes(q) || p.tldrEN.toLowerCase().includes(q) || p.authors.some(a => a.name.toLowerCase().includes(q)));
+    }
+    if (sort === 'relevance') out.sort((a,b) => b.relevance - a.relevance);
+    else if (sort === 'tier') out.sort((a,b) => a.tier.localeCompare(b.tier) || b.relevance - a.relevance);
+    else out.sort((a,b) => b.date.localeCompare(a.date));
+    return out;
+  }, [papers, filters, sort]);
+
+  const byDate = useMemo(() => {
+    const g = {};
+    for (const p of visible) { const d = p.date.slice(0,10); (g[d] ||= []).push(p); }
+    return Object.entries(g).sort((a,b) => b[0].localeCompare(a[0]));
+  }, [visible]);
+
+  const activeCount = filters.tier.length + filters.status.length + filters.topics.length + (filters.hasCode?1:0) + (filters.hfDaily?1:0) + (filters.trackedAuthor?1:0) + (filters.relevanceMin>0?1:0);
+  const dateHeader = (d) => {
+    const date = new Date(d); const today = new Date(); today.setHours(0,0,0,0);
+    const diff = Math.round((today - date) / 86400000);
+    if (diff === 0) return 'Today · ' + d;
+    if (diff === 1) return 'Yesterday · ' + d;
+    if (diff < 7) return diff + ' days ago · ' + d;
+    return new Date(d).toLocaleDateString('en-US', { weekday:'long', month:'short', day:'numeric' });
+  };
+
+  return (
+    <div className="h-full flex overflow-hidden">
+      {/* Filter rail */}
+      <aside className="w-60 shrink-0 border-r border-border flex flex-col overflow-hidden">
+        <div className="px-3 py-3 border-b border-border flex items-center gap-2">
+          <h3 className="text-xs font-semibold">Filters</h3>
+          {activeCount > 0 && <Badge variant="secondary">{activeCount}</Badge>}
+          {activeCount > 0 && <Button size="sm" variant="ghost" className="ml-auto h-6 text-[10px]" onClick={resetF}>Clear</Button>}
+        </div>
+        <div className="flex-1 overflow-y-auto p-3 space-y-4">
+          <FilterSection title="Tier">
+            <div className="flex gap-1">
+              {['A','B','C'].map(t => {
+                const on = filters.tier.includes(t);
+                return <button key={t} onClick={() => setF('tier', on ? filters.tier.filter(x=>x!==t) : [...filters.tier, t])}
+                  className={cn('h-7 flex-1 rounded border font-mono text-xs', on ? 'bg-fg text-bg border-fg' : 'bg-card border-border hover:bg-accent')}>{t}</button>;
+              })}
+            </div>
+          </FilterSection>
+          <FilterSection title="Status">
+            <div className="space-y-1">
+              {['unread','saved','must_read','ignored'].map(s => (
+                <label key={s} className="flex items-center gap-2 text-xs cursor-pointer">
+                  <Checkbox checked={filters.status.includes(s)} onChange={() => setF('status', filters.status.includes(s) ? filters.status.filter(x=>x!==s) : [...filters.status, s])} />
+                  <span className="capitalize">{s.replace('_', ' ')}</span>
+                </label>
+              ))}
+            </div>
+          </FilterSection>
+          <FilterSection title="Relevance ≥">
+            <div className="flex items-center gap-2">
+              <Slider min={0} max={10} step={0.1} value={filters.relevanceMin} onChange={(v) => setF('relevanceMin', v)} />
+              <span className="font-mono text-xs w-8 text-right">{filters.relevanceMin.toFixed(1)}</span>
+            </div>
+          </FilterSection>
+          <FilterSection title="Signals">
+            <div className="space-y-1">
+              <label className="flex items-center gap-2 text-xs"><Checkbox checked={filters.hfDaily} onChange={v=>setF('hfDaily',v)} /> <span className="text-orange-500"><Icon.Flame /></span> HF Daily</label>
+              <label className="flex items-center gap-2 text-xs"><Checkbox checked={filters.hasCode} onChange={v=>setF('hasCode',v)} /> <span className="text-emerald-500"><Icon.Code /></span> Has code</label>
+              <label className="flex items-center gap-2 text-xs"><Checkbox checked={filters.trackedAuthor} onChange={v=>setF('trackedAuthor',v)} /> <span className="text-yellow-500"><Icon.UserCheck /></span> Tracked author</label>
+            </div>
+          </FilterSection>
+          <FilterSection title="Topics">
+            <div className="flex flex-wrap gap-1">
+              {TOPICS.slice(0, 10).map(t => {
+                const on = filters.topics.includes(t.slug);
+                return <button key={t.slug} onClick={() => setF('topics', on ? filters.topics.filter(x=>x!==t.slug) : [...filters.topics, t.slug])}
+                  className={cn('text-[10px] px-1.5 py-0.5 rounded-full border', on ? 'bg-fg text-bg border-fg' : 'bg-card border-border hover:bg-accent')}>{t.name}</button>;
+              })}
+            </div>
+          </FilterSection>
+        </div>
+      </aside>
+
+      {/* Feed list */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="px-6 py-3 border-b border-border flex items-center gap-3">
+          <div className="relative w-96">
+            <span className="absolute left-2 top-1/2 -translate-y-1/2 opacity-50"><Icon.Search /></span>
+            <Input value={filters.query} onChange={e => setF('query', e.target.value)} placeholder="Search title, TL;DR, author…" className="pl-7 w-full" />
+          </div>
+          <div className="flex items-center gap-1.5 ml-2">
+            <span className="text-[10px] uppercase tracking-wider text-mutedfg font-semibold">Quick:</span>
+            {[
+              { label:'Must read', fn:()=>setF('status',['must_read']) },
+              { label:'Tier A', fn:()=>setF('tier',['A']) },
+              { label:'With code', fn:()=>setF('hasCode',true) },
+              { label:'Tracked', fn:()=>setF('trackedAuthor',true) },
+            ].map(p => <Button key={p.label} size="sm" variant="outline" onClick={p.fn}>{p.label}</Button>)}
+          </div>
+          <div className="ml-auto flex items-center gap-2">
+            <select value={sort} onChange={e => setSort(e.target.value)} className="h-7 rounded-md border border-border bg-card px-2 text-xs">
+              <option value="date_desc">Newest first</option>
+              <option value="relevance">Relevance</option>
+              <option value="tier">Tier</option>
+            </select>
+            <span className="text-xs text-mutedfg font-mono">{visible.length} papers</span>
+          </div>
+        </div>
+        <div className="flex-1 overflow-y-auto">
+          {byDate.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-24 text-center">
+              <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-3"><Icon.Search s={20} /></div>
+              <h3 className="font-semibold">No papers match your filters</h3>
+              <p className="text-xs text-mutedfg mt-1">Try loosening a filter, or <button className="underline" onClick={resetF}>clear all</button>.</p>
+            </div>
+          ) : (
+            <div className="px-6 py-4">
+              {byDate.map(([date, ps]) => (
+                <div key={date} className="mb-6">
+                  <div className="flex items-baseline gap-3 mb-2 sticky top-0 z-10 bg-bg py-1.5">
+                    <h3 className="text-sm font-semibold flex items-center gap-2"><span className="text-mutedfg"><Icon.Calendar /></span>{dateHeader(date)}</h3>
+                    <span className="text-[11px] text-mutedfg font-mono">{ps.length} papers</span>
+                  </div>
+                  <div className="space-y-2">
+                    {ps.map(p => (
+                      <PaperCard key={p.id} paper={p} selected={selected === p.id} expanded={expanded.has(p.id)}
+                        onSelect={() => setSelected(p.id)}
+                        onToggleExpand={() => setExpanded(s => { const n = new Set(s); n.has(p.id) ? n.delete(p.id) : n.add(p.id); return n; })}
+                        setStatus={setStatus} />
+                    ))}
+                  </div>
+                </div>
+              ))}
+              <div className="text-center py-6 text-xs text-mutedfg"><kbd>j</kbd>/<kbd>k</kbd> navigate · <kbd>o</kbd> open · <kbd>s</kbd> save</div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FilterSection({ title, children }) {
+  return <div><div className="text-[10px] uppercase tracking-wider font-semibold text-mutedfg mb-1.5">{title}</div>{children}</div>;
+}
+
+function PaperCard({ paper, selected, expanded, onSelect, onToggleExpand, setStatus }) {
+  const tierVariant = { A:'tierA', B:'tierB', C:'tierC' };
+  const insts = Array.from(new Set(paper.authors.map(a => INST_BY_ID[a.institutionId]?.short).filter(Boolean)));
+  const shownAuthors = paper.authors.slice(0, 3);
+  const extraAuthors = paper.authors.length - shownAuthors.length;
+  const isSaved = paper.status === 'saved';
+  const isMust = paper.status === 'must_read';
+  const isIgnored = paper.status === 'ignored';
+
+  return (
+    <article onClick={onSelect}
+      className={cn('group relative rounded-lg border bg-card px-4 py-3 transition-all hover:shadow-sm hover:border-fg/20 cursor-pointer',
+        selected && 'ring-1 ring-fg/40 border-fg/40',
+        isMust && 'border-l-[3px] border-l-rose-500',
+        isIgnored && 'opacity-40')}>
+      <div className="flex items-center gap-1.5 mb-1.5 text-[11px] text-mutedfg">
+        <Badge variant={tierVariant[paper.tier]} className="font-mono">{paper.tier}</Badge>
+        {paper.topics.slice(0, 3).map(slug => {
+          const t = TOPIC_BY_SLUG[slug];
+          return t ? <Badge key={slug} variant={t.side}>{t.name}</Badge> : null;
+        })}
+        <span className="ml-auto font-mono">{relativeDate(paper.date)}</span>
+        {isSaved && <span className="text-sky-500"><Icon.BookmarkCheck /></span>}
+      </div>
+      <h3 className="text-[15px] font-semibold leading-snug">{paper.title}</h3>
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-1 text-xs text-mutedfg">
+        <span>{shownAuthors.map(a => a.name).join(', ')}{extraAuthors > 0 && <span className="italic"> et al.</span>}</span>
+        <span className="opacity-40">·</span>
+        <span className="text-fg/70">{insts.join(' · ')}</span>
+        <span className="opacity-40">·</span>
+        <span className="font-mono text-[10px]">{paper.arxivId}</span>
+      </div>
+      <p className="mt-2 text-[13px] leading-relaxed text-fg/85">{paper.tldrEN}</p>
+      <p className="mt-1 text-[12px] leading-relaxed text-mutedfg zh">{paper.tldrZH}</p>
+      <div className="mt-2 flex flex-wrap items-center gap-3 text-[11px] text-mutedfg">
+        <span className="flex items-center gap-1"><span className="text-amber-500"><Icon.Star s={12} /></span><span className="font-mono font-medium text-fg/80">{paper.relevance.toFixed(1)}</span></span>
+        {paper.citationsPerWeek > 0 && <span className="flex items-center gap-1"><span className="text-purple-500"><Icon.Trend s={12} /></span><span className="font-mono">{paper.citationsPerWeek} cites/7d</span></span>}
+        {paper.hasCode && <span className="flex items-center gap-1 text-emerald-500"><Icon.Code s={12} />code</span>}
+        {paper.hfDaily && <span className="flex items-center gap-1 text-orange-500"><Icon.Flame s={12} />HF Daily</span>}
+        {paper.trackedAuthor && <span className="flex items-center gap-1 text-yellow-500"><Icon.UserCheck s={12} />tracked</span>}
+        <span className="ml-auto uppercase text-[10px] tracking-wider font-mono opacity-60">{paper.source}</span>
+      </div>
+      {expanded && (
+        <div className="mt-3 pt-3 border-t border-border space-y-2.5">
+          <div>
+            <div className="text-[10px] uppercase tracking-wider font-semibold text-mutedfg mb-1">Abstract</div>
+            <p className="text-xs leading-relaxed text-fg/85">{paper.tldrEN} {paper.tldrEN} The method decouples valuation from execution, which is unusual; it also makes the whole pipeline easy to audit.</p>
+          </div>
+          <div>
+            <div className="text-[10px] uppercase tracking-wider font-semibold text-mutedfg mb-1">My score</div>
+            <div className="flex items-center gap-3"><Slider min={0} max={10} step={0.1} value={paper.relevance} onChange={()=>{}} /><span className="font-mono text-sm w-10 text-right">{paper.relevance.toFixed(1)}</span></div>
+          </div>
+          <div>
+            <div className="text-[10px] uppercase tracking-wider font-semibold text-mutedfg mb-1">Notes</div>
+            <Textarea rows={2} placeholder="Your private notes…" />
+          </div>
+        </div>
+      )}
+      <div className="mt-3 flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
+        <Button size="sm" variant={isSaved ? 'secondary' : 'outline'} onClick={() => setStatus(paper.id, isSaved ? 'unread' : 'saved')}>
+          <Icon.Bookmark /> {isSaved ? 'Saved' : 'Save'}
+        </Button>
+        <Button size="sm" variant={isMust ? 'secondary' : 'outline'} onClick={() => setStatus(paper.id, isMust ? 'unread' : 'must_read')} className={isMust ? 'text-rose-500' : ''}>
+          <Icon.AlertCircle /> Must read
+        </Button>
+        <Button size="sm" variant={isIgnored ? 'secondary' : 'ghost'} onClick={() => setStatus(paper.id, isIgnored ? 'unread' : 'ignored')}>
+          <Icon.X /> Ignore
+        </Button>
+        <Button size="sm" variant="ghost"><Icon.ExternalLink /> PDF</Button>
+        <Button size="sm" variant="ghost" className="ml-auto" onClick={onToggleExpand}>
+          <Icon.ChevronDown className={cn('transition-transform', expanded && 'rotate-180')} /> {expanded ? 'Collapse' : 'Expand'}
+        </Button>
+      </div>
+    </article>
+  );
+}
+
+// ═════════════════════════════ DASHBOARD ═════════════════════════════
+function Dashboard({ papers }) {
+  const [win, setWin] = useState('30d');
+  const WIN_DAYS = { '7d':7, '30d':30, '90d':90, 'all':365 };
+  const filtered = papers.filter(p => Date.now() - new Date(p.date).getTime() < WIN_DAYS[win]*86400000);
+  const today = new Date().toDateString();
+  const newToday = papers.filter(p => new Date(p.date).toDateString() === today).length;
+  const thisWeek = papers.filter(p => Date.now() - new Date(p.date).getTime() < 7*86400000).length;
+  const mustRead = papers.filter(p => p.status === 'must_read').length;
+
+  const trend = useMemo(() => {
+    const days = {};
+    for (const p of filtered) { const d = p.date.slice(5,10); days[d] ||= {date:d,A:0,B:0,C:0}; days[d][p.tier]++; }
+    return Object.values(days).sort((a,b) => a.date.localeCompare(b.date));
+  }, [filtered]);
+
+  const topicData = useMemo(() => {
+    const buckets = {};
+    for (const p of filtered) { const w = p.date.slice(5,10); buckets[w] ||= {week:w}; for (const t of p.topics.slice(0,1)) buckets[w][t] = (buckets[w][t]||0)+1; }
+    return Object.values(buckets).sort((a,b) => a.week.localeCompare(b.week));
+  }, [filtered]);
+  const topTopics = useMemo(() => {
+    const c = {}; for (const p of filtered) for (const t of p.topics) c[t] = (c[t]||0)+1;
+    return Object.entries(c).sort((a,b) => b[1]-a[1]).slice(0,5).map(([s])=>s);
+  }, [filtered]);
+
+  const tierData = ['A','B','C'].map(t => ({ name:`Tier ${t}`, value: filtered.filter(p=>p.tier===t).length, color: t==='A'?'#10b981':t==='B'?'#0ea5e9':'#94a3b8' }));
+
+  const instData = useMemo(() => {
+    const c = {}; for (const p of filtered) for (const a of p.authors) c[a.institutionId] = (c[a.institutionId]||0)+1;
+    return Object.entries(c).sort((a,b)=>b[1]-a[1]).slice(0,10).map(([id,count]) => ({ name: INST_BY_ID[id]?.short || id, count, whitelisted: INST_BY_ID[id]?.whitelisted }));
+  }, [filtered]);
+
+  const authData = useMemo(() => {
+    const c = {}; for (const p of filtered) for (const a of p.authors) if (a.authorId) c[a.authorId] = (c[a.authorId]||0)+1;
+    return Object.entries(c).sort((a,b)=>b[1]-a[1]).slice(0,10).map(([id,count]) => ({ name: AUTHOR_BY_ID[id]?.name||id, count, tracked: AUTHOR_BY_ID[id]?.tracked }));
+  }, [filtered]);
+
+  const TC = ['#0ea5e9','#10b981','#f59e0b','#8b5cf6','#14b8a6'];
+  const tt = { fontSize: 11, padding: 6, background: 'rgb(var(--card))', border: '1px solid rgb(var(--border))', borderRadius: 4 };
+
+  return (
+    <div className="h-full overflow-y-auto">
+      <div className="px-6 py-4 border-b border-border flex items-center gap-3">
+        <div>
+          <h1 className="text-xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-xs text-mutedfg mt-0.5">{new Date().toLocaleDateString(undefined, {weekday:'long', month:'long', day:'numeric', year:'numeric'})}</p>
+        </div>
+        <div className="ml-auto flex gap-1">
+          {['7d','30d','90d','all'].map(w => (
+            <button key={w} onClick={() => setWin(w)} className={cn('px-2.5 h-7 rounded text-xs font-mono border', win===w ? 'bg-fg text-bg border-fg' : 'border-border hover:bg-accent')}>{w}</button>
+          ))}
+        </div>
+      </div>
+
+      <div className="p-6 grid grid-cols-2 gap-4">
+        <Card className="p-4">
+          <div className="text-sm font-semibold">Today's Numbers</div>
+          <div className="grid grid-cols-4 gap-4 mt-4">
+            <Kpi label="New today" value={newToday} delta={+9} />
+            <Kpi label="This week" value={thisWeek} delta={+12} />
+            <Kpi label={`Last ${WIN_DAYS[win]}d`} value={filtered.length} delta={+4} />
+            <Kpi label="Must read" value={mustRead} delta={+3} tone="rose" />
+          </div>
+          <div className="mt-5 pt-4 border-t border-border text-xs text-mutedfg">
+            <div className="mb-2">Ingestion trend — stacked by tier</div>
+            <div className="h-28">
+              <ResponsiveContainer>
+                <AreaChart data={trend}>
+                  <CartesianGrid strokeDasharray="2 4" stroke="rgb(var(--border))" />
+                  <XAxis dataKey="date" fontSize={9} stroke="rgb(var(--muted-fg))" />
+                  <YAxis fontSize={9} stroke="rgb(var(--muted-fg))" width={20} />
+                  <Tooltip contentStyle={tt} />
+                  <Area dataKey="A" stackId="1" stroke="#10b981" fill="#10b981" fillOpacity={0.35} />
+                  <Area dataKey="B" stackId="1" stroke="#0ea5e9" fill="#0ea5e9" fillOpacity={0.35} />
+                  <Area dataKey="C" stackId="1" stroke="#94a3b8" fill="#94a3b8" fillOpacity={0.35} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </Card>
+
+        <Card className="p-4">
+          <div className="text-sm font-semibold">Topic Heat Trend</div>
+          <div className="text-xs text-mutedfg mt-0.5 mb-2">Top 5 topics · papers per day</div>
+          <div className="h-48">
+            <ResponsiveContainer>
+              <LineChart data={topicData}>
+                <CartesianGrid strokeDasharray="2 4" stroke="rgb(var(--border))" />
+                <XAxis dataKey="week" fontSize={9} stroke="rgb(var(--muted-fg))" />
+                <YAxis fontSize={9} stroke="rgb(var(--muted-fg))" width={20} />
+                <Tooltip contentStyle={tt} />
+                {topTopics.map((t,i) => <Line key={t} dataKey={t} stroke={TC[i]} name={TOPIC_BY_SLUG[t]?.name} strokeWidth={1.6} dot={false} />)}
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="flex flex-wrap gap-1 mt-2">
+            {topTopics.map((t,i) => <span key={t} className="text-[10px] flex items-center gap-1"><span className="h-1.5 w-2 rounded-sm" style={{background:TC[i]}}/>{TOPIC_BY_SLUG[t]?.name}</span>)}
+          </div>
+        </Card>
+
+        <Card className="p-4">
+          <div className="text-sm font-semibold">Tier Distribution</div>
+          <div className="text-xs text-mutedfg mt-0.5 mb-2">How papers break down A / B / C</div>
+          <div className="h-48">
+            <ResponsiveContainer>
+              <PieChart>
+                <Pie data={tierData} dataKey="value" innerRadius={40} outerRadius={70} paddingAngle={2}>
+                  {tierData.map((d,i) => <Cell key={i} fill={d.color} />)}
+                </Pie>
+                <Legend wrapperStyle={{fontSize:11}} />
+                <Tooltip contentStyle={tt} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
+
+        <Card className="p-4">
+          <div className="text-sm font-semibold">Top Institutions</div>
+          <div className="text-xs text-mutedfg mt-0.5 mb-2">Whitelisted highlighted · {win} window</div>
+          <div className="h-56">
+            <ResponsiveContainer>
+              <BarChart data={instData} layout="vertical" margin={{left:50}}>
+                <CartesianGrid strokeDasharray="2 4" stroke="rgb(var(--border))" />
+                <XAxis type="number" fontSize={9} stroke="rgb(var(--muted-fg))" />
+                <YAxis type="category" dataKey="name" fontSize={9} width={70} stroke="rgb(var(--muted-fg))" />
+                <Tooltip contentStyle={tt} />
+                <Bar dataKey="count">{instData.map((d,i) => <Cell key={i} fill={d.whitelisted ? '#10b981' : '#64748b'} />)}</Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
+
+        <Card className="p-4">
+          <div className="text-sm font-semibold">Top Authors</div>
+          <div className="text-xs text-mutedfg mt-0.5 mb-2">Tracked authors highlighted</div>
+          <div className="h-56">
+            <ResponsiveContainer>
+              <BarChart data={authData} layout="vertical" margin={{left:60}}>
+                <CartesianGrid strokeDasharray="2 4" stroke="rgb(var(--border))" />
+                <XAxis type="number" fontSize={9} stroke="rgb(var(--muted-fg))" />
+                <YAxis type="category" dataKey="name" fontSize={9} width={90} stroke="rgb(var(--muted-fg))" />
+                <Tooltip contentStyle={tt} />
+                <Bar dataKey="count">{authData.map((d,i) => <Cell key={i} fill={d.tracked ? '#f59e0b' : '#64748b'} />)}</Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
+
+        <Card className="p-4">
+          <div className="text-sm font-semibold">Recent Digest teaser</div>
+          <div className="text-xs text-mutedfg mt-0.5 mb-2">2026 W17 · Top 5 picks</div>
+          <div className="text-xs space-y-2">
+            {papers.filter(p => p.tier === 'A').slice(0, 5).map(p => (
+              <div key={p.id} className="flex items-start gap-2 border-b border-border pb-2 last:border-0">
+                <Badge variant="tierA" className="font-mono mt-0.5">A</Badge>
+                <div className="min-w-0 flex-1">
+                  <div className="font-medium leading-tight line-clamp-2">{p.title}</div>
+                  <div className="text-mutedfg text-[10px] mt-0.5 truncate">{p.authors.slice(0,2).map(a => a.name).join(', ')}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
+    </div>
+  );
+}
+function Kpi({ label, value, delta, tone }) {
+  return <div>
+    <div className="text-[10px] uppercase tracking-wider text-mutedfg font-semibold">{label}</div>
+    <div className="flex items-baseline gap-2 mt-1">
+      <span className={cn('text-2xl font-bold tabular-nums', tone === 'rose' && 'text-rose-500')}>{value}</span>
+      <span className={cn('text-[11px] font-mono', delta >= 0 ? 'text-emerald-500' : 'text-rose-500')}>{delta >= 0 ? '+' : ''}{delta}</span>
+    </div>
+  </div>;
+}
+
+// ═════════════════════════════ EXPLORE ═════════════════════════════
+function Explore({ papers }) {
+  const [tab, setTab] = useState('table');
+  const [q, setQ] = useState('');
+  const filtered = papers.filter(p => !q || p.title.toLowerCase().includes(q.toLowerCase()));
+  return (
+    <div className="h-full overflow-y-auto">
+      <div className="px-6 py-4 border-b border-border">
+        <h1 className="text-xl font-bold tracking-tight">Explore</h1>
+        <p className="text-xs text-mutedfg mt-0.5">Full-history search & flexible queries. Feed is today; Explore is the archive.</p>
+      </div>
+      <div className="px-6 py-3 border-b border-border bg-muted/20 flex items-center gap-3">
+        <div className="flex gap-1">
+          {[['table','Table'], ['timeline','Timeline'], ['topics','Topic deep dive']].map(([k,l]) => (
+            <button key={k} onClick={() => setTab(k)} className={cn('px-3 h-7 rounded text-xs', tab === k ? 'bg-fg text-bg' : 'border border-border hover:bg-accent')}>{l}</button>
+          ))}
+        </div>
+        <div className="ml-auto flex items-center gap-2">
+          <div className="relative w-64"><span className="absolute left-2 top-1/2 -translate-y-1/2 opacity-50"><Icon.Search /></span>
+            <Input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search title, TL;DR, author…" className="pl-7 w-full" /></div>
+          <Button size="sm" variant="outline"><Icon.Download /> CSV</Button>
+          <Button size="sm" variant="outline"><Icon.Download /> BibTeX</Button>
+        </div>
+      </div>
+      {tab === 'table' && (
+        <div className="p-6">
+          <div className="rounded-lg border border-border overflow-hidden">
+            <table className="w-full text-xs">
+              <thead className="bg-muted/50 border-b border-border">
+                <tr className="text-left">
+                  <th className="w-8 py-2 px-2"></th>
+                  <th className="py-2 px-2">Title</th>
+                  <th className="py-2 px-2 w-40">Authors</th>
+                  <th className="py-2 px-2 w-20">Date</th>
+                  <th className="py-2 px-2 w-12">Tier</th>
+                  <th className="py-2 px-2 w-32">Topics</th>
+                  <th className="py-2 px-2 w-16">Score</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.slice(0,50).map(p => (
+                  <tr key={p.id} className="border-b border-border last:border-0 hover:bg-muted/30">
+                    <td className="py-2 px-2"><Checkbox /></td>
+                    <td className="py-2 px-2 font-medium max-w-0"><div className="truncate">{p.title}</div></td>
+                    <td className="py-2 px-2 truncate text-mutedfg">{p.authors.slice(0,2).map(a=>a.name).join(', ')}{p.authors.length>2 && ' et al.'}</td>
+                    <td className="py-2 px-2 font-mono text-mutedfg">{p.date.slice(5,10)}</td>
+                    <td className="py-2 px-2"><Badge variant={p.tier==='A'?'tierA':p.tier==='B'?'tierB':'tierC'} className="font-mono">{p.tier}</Badge></td>
+                    <td className="py-2 px-2"><div className="flex flex-wrap gap-1">{p.topics.slice(0,2).map(t => { const tp = TOPIC_BY_SLUG[t]; return tp ? <Badge key={t} variant={tp.side} className="text-[9px]">{tp.name}</Badge> : null; })}</div></td>
+                    <td className="py-2 px-2 font-mono">{p.relevance.toFixed(1)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-[11px] text-mutedfg mt-2 text-center">Showing 50 of {filtered.length} papers</p>
+        </div>
+      )}
+      {tab === 'timeline' && (
+        <div className="p-6 space-y-5">
+          {Object.entries(filtered.reduce((m,p) => { const k = p.date.slice(0,7); (m[k]||=[]).push(p); return m; }, {})).sort().reverse().map(([m, ps]) => (
+            <div key={m}>
+              <div className="flex items-baseline gap-3 mb-2"><h3 className="font-mono text-sm font-semibold">{m}</h3><span className="text-xs text-mutedfg">{ps.length} papers</span></div>
+              <div className="space-y-1 border-l-2 border-border pl-4 ml-1">
+                {ps.slice(0, 10).map(p => (
+                  <div key={p.id} className="flex items-start gap-2 text-xs py-0.5">
+                    <span className="font-mono text-mutedfg w-14 shrink-0">{p.date.slice(8,10)}/{p.date.slice(5,7)}</span>
+                    <Badge variant={p.tier==='A'?'tierA':p.tier==='B'?'tierB':'tierC'} className="font-mono shrink-0">{p.tier}</Badge>
+                    <span className="line-clamp-1 flex-1">{p.title}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      {tab === 'topics' && (
+        <div className="p-6 grid grid-cols-3 gap-3">
+          {TOPICS.map(t => {
+            const count = papers.filter(p => p.topics.includes(t.slug)).length;
+            return (
+              <Card key={t.slug} className="p-3 hover:border-fg/30 cursor-pointer">
+                <div className="flex items-center justify-between">
+                  <div className="font-medium text-sm">{t.name}</div>
+                  <Badge variant={t.side}>{t.side}</Badge>
+                </div>
+                <div className="text-[11px] text-mutedfg mt-0.5">{count} papers · weight {t.weight.toFixed(1)}</div>
+                <p className="text-xs text-mutedfg mt-2 line-clamp-2">{t.descEN}</p>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═════════════════════════════ NETWORK ═════════════════════════════
+function Network({ papers }) {
+  const [center, setCenter] = useState('a1');
+  const [hops, setHops] = useState(2);
+  const centerAuthor = AUTHOR_BY_ID[center];
+  // Deterministic layout: place nodes in rings
+  const nodes = useMemo(() => {
+    const hop1 = AUTHORS.filter(a => a.id !== center).slice(0, 6);
+    const hop2 = AUTHORS.filter(a => a.id !== center && !hop1.includes(a)).slice(0, 8);
+    const W = 600, H = 440;
+    const out = [{ ...centerAuthor, group:'center', x:W/2, y:H/2 }];
+    hop1.forEach((a,i) => {
+      const ang = (i / hop1.length) * Math.PI * 2;
+      out.push({ ...a, group:'hop1', x: W/2 + Math.cos(ang)*130, y: H/2 + Math.sin(ang)*110 });
+    });
+    if (hops >= 2) hop2.forEach((a,i) => {
+      const ang = (i / hop2.length) * Math.PI * 2 + 0.3;
+      out.push({ ...a, group:'hop2', x: W/2 + Math.cos(ang)*210, y: H/2 + Math.sin(ang)*180 });
+    });
+    return out;
+  }, [center, hops]);
+  const nodeById = Object.fromEntries(nodes.map(n => [n.id, n]));
+  const links = useMemo(() => {
+    const out = [];
+    for (const n of nodes) if (n.group === 'hop1') out.push([center, n.id]);
+    if (hops >= 2) for (const n of nodes) if (n.group === 'hop2') {
+      const h1 = nodes.filter(x => x.group === 'hop1');
+      const target = h1[Math.floor(((n.x*n.y) % h1.length + h1.length) % h1.length)];
+      if (target) out.push([target.id, n.id]);
+    }
+    return out;
+  }, [nodes, center, hops]);
+  const [selNode, setSelNode] = useState(null);
+  return (
+    <div className="h-full flex flex-col overflow-hidden">
+      <div className="px-6 py-4 border-b border-border">
+        <h1 className="text-xl font-bold tracking-tight">Network</h1>
+        <p className="text-xs text-mutedfg mt-0.5">Ego-network of an author across recent co-authorship.</p>
+      </div>
+      <div className="px-6 py-3 border-b border-border bg-muted/20 flex items-center gap-3 flex-wrap">
+        <select value={center} onChange={e => setCenter(e.target.value)} className="h-7 rounded border border-border bg-card px-2 text-xs">
+          {AUTHORS.map(a => <option key={a.id} value={a.id}>{a.name} — {INST_BY_ID[a.institutionId]?.short}</option>)}
+        </select>
+        <div className="flex items-center gap-1">
+          <span className="text-xs text-mutedfg">Hops</span>
+          {[1,2,3].map(h => <button key={h} onClick={() => setHops(h)} className={cn('w-7 h-7 rounded border font-mono text-xs', hops===h ? 'bg-fg text-bg border-fg' : 'border-border')}>{h}</button>)}
+        </div>
+        <div className="ml-auto flex items-center gap-3 text-[11px] font-mono text-mutedfg">
+          <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-rose-500"/>center</span>
+          <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-sky-500"/>1-hop</span>
+          <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-slate-400"/>2-hop</span>
+          <span>★ tracked</span>
+        </div>
+      </div>
+      <div className="flex-1 min-h-0 flex">
+        <div className="flex-1 min-w-0 bg-muted/10 relative overflow-hidden">
+          <svg width="100%" height="100%" viewBox="0 0 600 440">
+            {links.map(([s,t], i) => {
+              const a = nodeById[s], b = nodeById[t]; if (!a || !b) return null;
+              return <line key={i} x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke="rgb(var(--muted-fg) / 0.3)" strokeWidth="1" />;
+            })}
+            {nodes.map(n => {
+              const color = n.group === 'center' ? '#ef4444' : n.group === 'hop1' ? '#0ea5e9' : '#94a3b8';
+              const r = n.group === 'center' ? 14 : n.group === 'hop1' ? 9 : 6;
+              return (
+                <g key={n.id} onClick={() => setSelNode(n)} style={{cursor:'pointer'}}>
+                  <circle cx={n.x} cy={n.y} r={r} fill={color} stroke={n.tracked ? '#facc15' : 'none'} strokeWidth="2.5" />
+                  <text x={n.x} y={n.y + r + 11} fontSize="10" textAnchor="middle" fill="rgb(var(--muted-fg))">{n.name}</text>
+                </g>
+              );
+            })}
+          </svg>
+        </div>
+        <Card className="w-72 shrink-0 m-3 self-start p-3 space-y-2 text-xs">
+          <div className="text-sm font-semibold">Node details</div>
+          {selNode ? <>
+            <div className="text-base font-semibold">{selNode.name}</div>
+            <div className="text-mutedfg">{INST_BY_ID[selNode.institutionId]?.name}</div>
+            <div className="flex gap-1"><Badge>{selNode.group}</Badge>{selNode.tracked && <Badge variant="tierA">tracked</Badge>}</div>
+            <div className="space-y-0.5 pt-2">
+              <div>Papers 30d: <span className="font-mono">{selNode.paper30d}</span></div>
+              <div>h-index: <span className="font-mono">{selNode.hIndex}</span></div>
+            </div>
+            <div className="flex gap-1 pt-2"><Button size="sm" variant="outline">View papers</Button><Button size="sm" variant="outline">Track</Button></div>
+          </> : <p className="text-mutedfg">Click a node to inspect.</p>}
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+// ═════════════════════════════ CONFERENCES ═════════════════════════════
+function Conferences() {
+  const verifyIcon = (v) => v === 'verified' ? <span className="text-emerald-500"><Icon.Check /></span>
+    : v === 'needs_review' ? <span className="text-amber-500"><Icon.Warn /></span>
+    : v === 'single_source' ? <span className="text-slate-400"><Icon.Help /></span>
+    : <span className="text-sky-500"><Icon.UserCheck /></span>;
+  const label = { verified:'Verified', needs_review:'Needs review', single_source:'Single source', manual:'Manual' };
+  const sorted = [...CONFERENCES].sort((a,b) => a.paperDeadline.localeCompare(b.paperDeadline));
+  return (
+    <div className="h-full overflow-y-auto">
+      <div className="px-6 py-4 border-b border-border">
+        <h1 className="text-xl font-bold tracking-tight">Conferences</h1>
+        <p className="text-xs text-mutedfg mt-0.5">Deadlines, dates, and verification status.</p>
+      </div>
+      <div className="p-6 grid grid-cols-2 gap-4">
+        {sorted.map(c => {
+          const d = daysAway(c.paperDeadline);
+          return (
+            <Card key={c.id} className="p-4">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <div className="text-base font-semibold">{c.name} {c.year}</div>
+                  <div className="text-xs text-mutedfg flex items-center gap-2 mt-0.5">
+                    <span className="flex items-center gap-1"><Icon.MapPin s={12} /> {c.location}</span>
+                    <span className="flex items-center gap-1 font-mono"><Icon.Calendar s={12} />{shortDate(c.startDate)}–{shortDate(c.endDate)}</span>
+                  </div>
+                </div>
+                <span className="flex items-center gap-1 text-[11px] px-2 py-1 rounded-full border border-border">{verifyIcon(c.verification)}{label[c.verification]}</span>
+              </div>
+              <div className="rounded-md border border-border p-2 bg-muted/30 mt-3 font-mono grid grid-cols-[100px_1fr_auto] gap-y-1 gap-x-2 text-xs">
+                {c.abstractDeadline && <><span className="text-mutedfg">Abstract</span><span>{shortDate(c.abstractDeadline)}</span><span className="text-mutedfg">{daysAway(c.abstractDeadline)}d</span></>}
+                <span className="text-mutedfg">Paper</span><span className="font-semibold">{shortDate(c.paperDeadline)}</span>
+                <span className={d !== null && d < 30 ? 'text-rose-500 font-semibold' : 'text-mutedfg'}>{d}d</span>
+                {c.decision && <><span className="text-mutedfg">Decision</span><span>{shortDate(c.decision)}</span><span className="text-mutedfg">{daysAway(c.decision)}d</span></>}
+              </div>
+              <div className="flex flex-wrap gap-1 mt-2">{c.topics.map(t => <Badge key={t} variant="secondary">{t}</Badge>)}</div>
+              <div className="flex justify-between text-xs mt-3">
+                <span className="text-mutedfg">{c.relatedPapers} papers in PaperPulse</span>
+                <a href="#" className="text-sky-500 flex items-center gap-1">Official <Icon.ExternalLink s={11} /></a>
+              </div>
+            </Card>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ═════════════════════════════ DIGEST ═════════════════════════════
+function Digest() {
+  const items = [
+    { id:'w17', year:2026, week:17, title:'The LLM-finance convergence week', start:'2026-04-20', end:'2026-04-26' },
+    { id:'w16', year:2026, week:16, title:'RL comes back, interpretability takes center stage', start:'2026-04-13', end:'2026-04-19' },
+    { id:'w15', year:2026, week:15, title:'Factor-zoo reopens — the transformer wave', start:'2026-04-06', end:'2026-04-12' },
+    { id:'w14', year:2026, week:14, title:'Stablecoins & CBDC design week', start:'2026-03-30', end:'2026-04-05' },
+    { id:'w13', year:2026, week:13, title:'Quiet start; a few agentic surprises', start:'2026-03-23', end:'2026-03-29' },
+  ];
+  const [cur, setCur] = useState(items[0].id);
+  const md = renderMarkdown(DIGEST_MD);
+  return (
+    <div className="h-full flex overflow-hidden">
+      <aside className="w-64 shrink-0 border-r border-border overflow-y-auto">
+        <div className="px-3 py-3 border-b border-border">
+          <div className="text-xs font-semibold">Weekly Digests</div>
+          <div className="text-[10px] text-mutedfg">Generated every Monday</div>
+        </div>
+        <ul className="p-1">
+          {items.map(it => (
+            <li key={it.id}>
+              <button onClick={() => setCur(it.id)} className={cn('w-full text-left px-2.5 py-2 rounded-md text-xs hover:bg-accent/50', cur === it.id && 'bg-accent')}>
+                <div className="font-mono text-[10px] text-mutedfg">{it.year} · W{it.week}</div>
+                <div className="font-medium leading-snug mt-0.5">{it.title}</div>
+                <div className="text-[10px] text-mutedfg mt-0.5">{it.start} → {it.end}</div>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </aside>
+      <div className="flex-1 overflow-y-auto">
+        <div className="sticky top-0 z-10 bg-bg/90 backdrop-blur border-b border-border px-6 py-3 flex items-center gap-2">
+          <div className="text-xs text-mutedfg font-mono">2026 W17</div>
+          <div className="ml-auto flex gap-1">
+            <Button size="sm" variant="outline"><Icon.Download /> Markdown</Button>
+            <Button size="sm" variant="outline"><Icon.Copy /> Copy</Button>
+            <Button size="sm" variant="outline"><Icon.Share /> Share</Button>
+          </div>
+        </div>
+        <article className="max-w-3xl mx-auto px-8 py-6 ppmd zh">{md}</article>
+      </div>
+    </div>
+  );
+}
+
+function renderMarkdown(src) {
+  const out = []; const lines = src.split('\n'); let buf = [];
+  const inline = s => s.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2">$1</a>');
+  const flush = () => {
+    if (!buf.length) return;
+    const isList = buf.every(l => /^\d+\.\s|^\-\s/.test(l));
+    if (isList) {
+      const ordered = /^\d+\./.test(buf[0]);
+      out.push(ordered ? <ol key={out.length}>{buf.map((l,i)=><li key={i} dangerouslySetInnerHTML={{__html: inline(l.replace(/^(\d+\.|\-)\s/,''))}} />)}</ol>
+                       : <ul key={out.length}>{buf.map((l,i)=><li key={i} dangerouslySetInnerHTML={{__html: inline(l.replace(/^(\d+\.|\-)\s/,''))}} />)}</ul>);
+    } else out.push(<p key={out.length} dangerouslySetInnerHTML={{__html: inline(buf.join(' '))}} />);
+    buf = [];
+  };
+  for (const line of lines) {
+    if (/^#\s/.test(line)) { flush(); out.push(<h1 key={out.length}>{line.replace(/^#\s/,'')}</h1>); }
+    else if (/^##\s/.test(line)) { flush(); out.push(<h2 key={out.length}>{line.replace(/^##\s/,'')}</h2>); }
+    else if (/^###\s/.test(line)) { flush(); out.push(<h3 key={out.length}>{line.replace(/^###\s/,'')}</h3>); }
+    else if (!line.trim()) flush();
+    else buf.push(line);
+  }
+  flush();
+  return out;
+}
+
+// ═════════════════════════════ INSTITUTIONS ═════════════════════════════
+function Institutions() {
+  const [sel, setSel] = useState(null);
+  const s = INST_BY_ID[sel];
+  return (
+    <div className="h-full flex overflow-hidden">
+      <div className="flex-1 overflow-y-auto">
+        <div className="px-6 py-4 border-b border-border">
+          <h1 className="text-xl font-bold tracking-tight">Institutions</h1>
+          <p className="text-xs text-mutedfg mt-0.5">{INSTITUTIONS.length} institutions · whitelisted contribute to tier promotion.</p>
+        </div>
+        <div className="p-6">
+          <div className="rounded-lg border border-border overflow-hidden">
+            <table className="w-full text-xs">
+              <thead className="bg-muted/50 border-b border-border">
+                <tr className="text-left">
+                  <th className="w-10 py-2 px-2"></th>
+                  <th className="py-2 px-2">Name</th>
+                  <th className="py-2 px-2 w-28">Type</th>
+                  <th className="py-2 px-2 w-24">Country</th>
+                  <th className="py-2 px-2 w-20 text-right">30d</th>
+                  <th className="py-2 px-2 w-20 text-right">Δ</th>
+                  <th className="py-2 px-2 w-24 text-center">Whitelist</th>
+                </tr>
+              </thead>
+              <tbody>
+                {INSTITUTIONS.map(i => (
+                  <tr key={i.id} onClick={() => setSel(i.id)} className="border-b border-border last:border-0 hover:bg-muted/30 cursor-pointer">
+                    <td className="py-2 px-2 text-base">{i.flag}</td>
+                    <td className="py-2 px-2 font-medium">{i.name}</td>
+                    <td className="py-2 px-2 text-mutedfg capitalize">{i.type.replace('_',' ')}</td>
+                    <td className="py-2 px-2 text-mutedfg">{i.country}</td>
+                    <td className="py-2 px-2 text-right font-mono">{i.paper30d}</td>
+                    <td className="py-2 px-2 text-right font-mono">{i.rankDelta > 0 ? <span className="text-emerald-500">↑{i.rankDelta}</span> : i.rankDelta < 0 ? <span className="text-rose-500">↓{Math.abs(i.rankDelta)}</span> : '—'}</td>
+                    <td className="py-2 px-2 text-center">{i.whitelisted ? <Badge variant="tierA">yes</Badge> : <Badge variant="secondary">no</Badge>}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      {s && (
+        <aside className="w-80 border-l border-border shrink-0 overflow-y-auto bg-muted/10">
+          <div className="px-4 py-3 border-b border-border flex items-center gap-2">
+            <div className="text-3xl">{s.flag}</div>
+            <div className="flex-1 min-w-0"><div className="font-semibold truncate">{s.name}</div><div className="text-[10px] text-mutedfg font-mono">{s.id}</div></div>
+            <Button size="sm" variant="ghost" onClick={() => setSel(null)}><Icon.X /></Button>
+          </div>
+          <div className="p-4 space-y-3 text-xs">
+            <div className="grid grid-cols-3 gap-2">
+              <div className="rounded border border-border p-2 bg-card"><div className="text-[9px] text-mutedfg uppercase font-semibold">30d</div><div className="text-sm font-semibold">{s.paper30d}</div></div>
+              <div className="rounded border border-border p-2 bg-card"><div className="text-[9px] text-mutedfg uppercase font-semibold">Type</div><div className="text-sm font-semibold capitalize">{s.type.replace('_',' ')}</div></div>
+              <div className="rounded border border-border p-2 bg-card"><div className="text-[9px] text-mutedfg uppercase font-semibold">Whitelist</div><div className="text-sm font-semibold">{s.whitelisted ? 'Yes' : 'No'}</div></div>
+            </div>
+            <div>
+              <div className="text-[10px] uppercase tracking-wider text-mutedfg font-semibold mb-1.5">Active authors</div>
+              <div className="space-y-1.5">
+                {AUTHORS.filter(a => a.institutionId === s.id).map(a => (
+                  <div key={a.id} className="flex items-center gap-2">
+                    <div className="h-6 w-6 rounded-full bg-gradient-to-br from-sky-500 to-violet-500 text-white text-[10px] font-semibold flex items-center justify-center">{a.name.split(' ').map(n=>n[0]).slice(0,2).join('')}</div>
+                    <span className="flex-1">{a.name}</span>
+                    <span className="text-mutedfg font-mono">h{a.hIndex}</span>
+                    {a.tracked && <span className="text-yellow-500"><Icon.Star s={12} /></span>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </aside>
+      )}
+    </div>
+  );
+}
+
+// ═════════════════════════════ AUTHORS ═════════════════════════════
+function Authors({ papers }) {
+  const [sel, setSel] = useState(null);
+  const a = AUTHOR_BY_ID[sel];
+  const sorted = [...AUTHORS].sort((x,y) => y.hIndex - x.hIndex);
+  return (
+    <div className="h-full flex overflow-hidden">
+      <div className="flex-1 overflow-y-auto">
+        <div className="px-6 py-4 border-b border-border">
+          <h1 className="text-xl font-bold tracking-tight">Authors</h1>
+          <p className="text-xs text-mutedfg mt-0.5">{AUTHORS.length} authors · {AUTHORS.filter(x=>x.tracked).length} tracked.</p>
+        </div>
+        <div className="p-6">
+          <div className="rounded-lg border border-border overflow-hidden">
+            <table className="w-full text-xs">
+              <thead className="bg-muted/50 border-b border-border">
+                <tr className="text-left">
+                  <th className="w-8 py-2 px-2"></th>
+                  <th className="py-2 px-2">Name</th>
+                  <th className="py-2 px-2 w-36">Institution</th>
+                  <th className="py-2 px-2 w-16 text-right">h-idx</th>
+                  <th className="py-2 px-2 w-20 text-right">30d</th>
+                  <th className="py-2 px-2 w-20 text-center">Tracked</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sorted.map(a => (
+                  <tr key={a.id} onClick={() => setSel(a.id)} className="border-b border-border last:border-0 hover:bg-muted/30 cursor-pointer">
+                    <td className="py-2 px-2"><div className="h-6 w-6 rounded-full bg-gradient-to-br from-sky-500 to-violet-500 text-white text-[10px] font-semibold flex items-center justify-center">{a.name.split(' ').map(n=>n[0]).slice(0,2).join('')}</div></td>
+                    <td className="py-2 px-2 font-medium">{a.name}</td>
+                    <td className="py-2 px-2 text-mutedfg">{INST_BY_ID[a.institutionId]?.short}</td>
+                    <td className="py-2 px-2 text-right font-mono">{a.hIndex}</td>
+                    <td className="py-2 px-2 text-right font-mono">{a.paper30d}</td>
+                    <td className="py-2 px-2 text-center">{a.tracked && <span className="text-yellow-500 inline-block"><Icon.Star s={12} /></span>}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      {a && (
+        <aside className="w-80 border-l border-border shrink-0 overflow-y-auto bg-muted/10">
+          <div className="px-4 py-3 border-b border-border flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-sky-500 to-violet-500 text-white text-sm font-semibold flex items-center justify-center">{a.name.split(' ').map(n=>n[0]).slice(0,2).join('')}</div>
+            <div className="flex-1 min-w-0"><div className="font-semibold">{a.name}</div><div className="text-xs text-mutedfg">{INST_BY_ID[a.institutionId]?.name}</div></div>
+            <Button size="sm" variant="ghost" onClick={() => setSel(null)}><Icon.X /></Button>
+          </div>
+          <div className="p-4 space-y-3 text-xs">
+            <div className="grid grid-cols-3 gap-2">
+              <div className="rounded border border-border p-2 bg-card"><div className="text-[9px] text-mutedfg uppercase font-semibold">h-idx</div><div className="text-sm font-semibold">{a.hIndex}</div></div>
+              <div className="rounded border border-border p-2 bg-card"><div className="text-[9px] text-mutedfg uppercase font-semibold">30d</div><div className="text-sm font-semibold">{a.paper30d}</div></div>
+              <div className="rounded border border-border p-2 bg-card"><div className="text-[9px] text-mutedfg uppercase font-semibold">Tracked</div><div className="text-sm font-semibold">{a.tracked?'Yes':'No'}</div></div>
+            </div>
+            <div>
+              <div className="text-[10px] uppercase tracking-wider text-mutedfg font-semibold mb-1.5">Topic mix</div>
+              <div className="space-y-1.5">
+                {a.topicMix.map(t => (
+                  <div key={t.topic}>
+                    <div className="flex justify-between"><span>{TOPIC_BY_SLUG[t.topic]?.name}</span><span className="font-mono text-mutedfg">{t.pct}%</span></div>
+                    <div className="h-1.5 rounded-full bg-muted overflow-hidden"><div className="h-full bg-sky-500" style={{width:t.pct+'%'}} /></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <Button size="sm" className="w-full" variant={a.tracked ? 'outline' : 'default'}><Icon.Star /> {a.tracked ? 'Untrack' : 'Track'} this author</Button>
+          </div>
+        </aside>
+      )}
+    </div>
+  );
+}
+
+// ═════════════════════════════ SETTINGS ═════════════════════════════
+function Settings() {
+  const [tab, setTab] = useState('sources');
+  const groups = [
+    { heading:'Pipeline', items:[
+      { id:'sources', icon:Icon.Globe, label:'Sources' },
+      { id:'topics', icon:Icon.Star, label:'Topics' },
+      { id:'scoring', icon:Icon.Bar, label:'Scoring' },
+      { id:'institutions', icon:Icon.Building, label:'Institutions' },
+      { id:'authors', icon:Icon.Users, label:'Authors' },
+    ]},
+    { heading:'Delivery', items:[
+      { id:'feed', icon:Icon.Newspaper, label:'Feed display' },
+      { id:'digest', icon:Icon.FileText, label:'Digest' },
+      { id:'llm', icon:Icon.Cmd, label:'LLM' },
+      { id:'notifications', icon:Icon.Bell, label:'Notifications' },
+    ]},
+    { heading:'System', items:[
+      { id:'data', icon:Icon.Code, label:'Data' },
+      { id:'integrations', icon:Icon.Share, label:'Integrations' },
+      { id:'deployment', icon:Icon.Globe, label:'Deployment' },
+      { id:'about', icon:Icon.Help, label:'About' },
+    ]},
+  ];
+  const renders = { sources: SourcesPanel, topics: TopicsPanel, scoring: ScoringPanel, institutions: InstPanel, authors: AuthorsPanel, feed: FeedPanel, digest: DigestPanel, llm: LLMPanel, notifications: NotifPanel, data: DataPanel, integrations: IntegPanel, deployment: DeployPanel, about: AboutPanel };
+  const Current = renders[tab];
+  return (
+    <div className="h-full flex overflow-hidden">
+      <aside className="w-52 shrink-0 border-r border-border overflow-y-auto bg-muted/20">
+        <div className="px-3 py-3 border-b border-border">
+          <div className="text-sm font-bold">Settings</div>
+          <div className="text-[10px] text-mutedfg">14 sections</div>
+        </div>
+        {groups.map(g => (
+          <div key={g.heading} className="py-2">
+            <div className="px-3 pb-1 text-[10px] uppercase tracking-wider font-semibold text-mutedfg">{g.heading}</div>
+            <nav className="px-1 space-y-0.5">
+              {g.items.map(it => (
+                <button key={it.id} onClick={() => setTab(it.id)} className={cn('flex items-center gap-2 px-2.5 py-1.5 rounded text-xs w-full text-left hover:bg-accent/60', tab === it.id && 'bg-accent font-medium')}>
+                  <it.icon /> {it.label}
+                </button>
+              ))}
+            </nav>
+          </div>
+        ))}
+      </aside>
+      <div className="flex-1 overflow-y-auto">
+        <div className="sticky top-0 z-10 bg-bg/80 backdrop-blur border-b border-border px-6 py-2.5 text-[11px] text-mutedfg font-mono">Settings / {tab}</div>
+        <Current />
+      </div>
+    </div>
+  );
+}
+
+function SRow({ label, hint, children }) {
+  return <div className="py-3 grid grid-cols-[240px_1fr] gap-6 items-start border-b border-border last:border-0">
+    <div><div className="text-xs font-medium">{label}</div>{hint && <div className="text-[11px] text-mutedfg mt-0.5 leading-relaxed">{hint}</div>}</div>
+    <div>{children}</div>
+  </div>;
+}
+function SCard({ title, desc, children }) {
+  return <Card className="mb-4">
+    <div className="px-4 pt-3 pb-2 border-b border-border">
+      <div className="text-sm font-semibold">{title}</div>
+      {desc && <div className="text-[11px] text-mutedfg mt-0.5">{desc}</div>}
+    </div>
+    <div className="px-4 py-2">{children}</div>
+  </Card>;
+}
+function SHeading({ title, desc }) {
+  return <div className="mb-5"><h2 className="text-lg font-bold">{title}</h2>{desc && <p className="text-xs text-mutedfg mt-0.5">{desc}</p>}</div>;
+}
+
+function SourcesPanel() {
+  const rows = [
+    { name:'arXiv OAI-PMH', cats:['cs.LG','q-fin.CP','q-fin.PM','stat.ML'], enabled:true, freq:'hourly', last:'12 min ago', status:'ok', count:3212 },
+    { name:'SSRN Top Finance', cats:['FEN','CGN'], enabled:true, freq:'daily', last:'6h ago', status:'ok', count:1842 },
+    { name:'Crossref DOI', cats:[], enabled:true, freq:'daily', last:'3h ago', status:'ok', count:921 },
+    { name:'Semantic Scholar', cats:['Finance','CS'], enabled:true, freq:'daily', last:'14h ago', status:'warn', count:440 },
+    { name:'HuggingFace Daily', cats:[], enabled:true, freq:'daily', last:'1h ago', status:'ok', count:87 },
+    { name:'Bloomberg Research RSS', cats:[], enabled:false, freq:'daily', last:'n/a', status:'off', count:0 },
+    { name:'bioRxiv', cats:[], enabled:false, freq:'daily', last:'n/a', status:'off', count:0 },
+  ];
+  return <div className="p-6 max-w-5xl">
+    <SHeading title="Sources" desc="Where PaperPulse pulls papers from. Toggle each source, configure categories, and trigger a manual ingest." />
+    <div className="flex items-center gap-2 mb-3">
+      <Button size="sm"><Icon.Plus /> Add custom source</Button>
+      <Button size="sm" variant="outline"><Icon.Play /> Run ingest now</Button>
+      <div className="ml-auto text-xs text-mutedfg font-mono">Next scheduled: 00:37</div>
+    </div>
+    <div className="rounded-lg border border-border overflow-hidden">
+      <table className="w-full text-xs">
+        <thead className="bg-muted/50 border-b border-border">
+          <tr className="text-left">
+            <th className="py-2 px-3 w-12">On</th>
+            <th className="py-2 px-3">Source</th>
+            <th className="py-2 px-3 w-40">Categories</th>
+            <th className="py-2 px-3 w-24">Frequency</th>
+            <th className="py-2 px-3 w-28">Last run</th>
+            <th className="py-2 px-3 w-20">Status</th>
+            <th className="py-2 px-3 w-24 text-right">30d papers</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map(r => (
+            <tr key={r.name} className="border-b border-border last:border-0 hover:bg-muted/30">
+              <td className="py-2 px-3"><Switch checked={r.enabled} /></td>
+              <td className="py-2 px-3 font-medium">{r.name}</td>
+              <td className="py-2 px-3"><div className="flex flex-wrap gap-1">{r.cats.length ? r.cats.map(c => <Badge key={c} variant="secondary" className="text-[10px]">{c}</Badge>) : <span className="text-mutedfg">—</span>}</div></td>
+              <td className="py-2 px-3 capitalize text-mutedfg">{r.freq}</td>
+              <td className="py-2 px-3 text-mutedfg font-mono">{r.last}</td>
+              <td className="py-2 px-3">
+                {r.status==='ok' && <Badge variant="tierA"><Icon.Check s={10} /> OK</Badge>}
+                {r.status==='warn' && <Badge variant="tierB"><Icon.Warn s={10} /> Warn</Badge>}
+                {r.status==='off' && <Badge variant="secondary">Off</Badge>}
+              </td>
+              <td className="py-2 px-3 text-right font-mono">{r.count}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>;
+}
+
+function TopicsPanel() {
+  return <div className="p-6 max-w-5xl">
+    <SHeading title="Topics" desc="Topic taxonomy splits into Finance (buy-side relevance) and CS-core (algorithmic infrastructure). Weights feed the scorer." />
+    <div className="flex gap-2 mb-3"><Button size="sm"><Icon.Plus /> Add topic</Button><Button size="sm" variant="outline">Import template</Button></div>
+    <div className="grid grid-cols-2 gap-4">
+      {[['finance','FINANCE'],['cs','CS-CORE']].map(([side, label]) => (
+        <div key={side}>
+          <h3 className="text-xs font-semibold mb-2 flex items-center gap-2"><Badge variant={side}>{label}</Badge><span className="text-mutedfg">({TOPICS.filter(t => t.side === side).length})</span></h3>
+          <div className="space-y-1.5">
+            {TOPICS.filter(t => t.side === side).map(t => (
+              <div key={t.slug} className="flex items-center gap-2 px-2 py-1.5 rounded border border-border bg-card text-xs">
+                <div className="flex-1 min-w-0"><div className="font-medium">{t.name}</div><div className="text-[10px] text-mutedfg truncate">{t.descEN}</div></div>
+                <span className="font-mono text-[10px] text-mutedfg">w</span>
+                <input className="h-6 w-12 text-[10px] text-center font-mono rounded border border-border bg-card" defaultValue={t.weight.toFixed(1)} />
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>;
+}
+
+function ScoringPanel() {
+  const [ws, setWs] = useState({ topic:0.35, inst:0.15, auth:0.15, venue:0.10, cite:0.10, hf:0.08, code:0.07 });
+  return <div className="p-6 max-w-4xl">
+    <SHeading title="Scoring engine" desc="Formula that converts raw signals → tier A/B/C. Edit weights & thresholds, test with a paper." />
+    <SCard title="Signal weights" desc="Linear combination — weights should sum to 1.0 ideally.">
+      {[['topic','Topic match'],['inst','Institution whitelist'],['auth','Tracked author'],['venue','Venue prestige'],['cite','Citations / 7d'],['hf','HF Daily pick'],['code','Has code']].map(([k,l]) => (
+        <div key={k} className="grid grid-cols-[200px_1fr_60px] gap-3 items-center py-1.5">
+          <span className="text-xs">{l}</span>
+          <Slider min={0} max={1} step={0.01} value={ws[k]} onChange={v => setWs(s => ({...s, [k]:v}))} />
+          <Input className="text-center font-mono" value={ws[k].toFixed(2)} onChange={e => setWs(s => ({...s, [k]:+e.target.value||0}))} />
+        </div>
+      ))}
+    </SCard>
+    <SCard title="Tier thresholds">
+      <SRow label="Tier A cutoff" hint="Must-reads — top signals across the board."><Input className="w-24" defaultValue="0.75" /></SRow>
+      <SRow label="Tier B cutoff" hint="Worth skimming — at least a few strong signals."><Input className="w-24" defaultValue="0.45" /></SRow>
+      <SRow label="Tier C cutoff" hint="Everything else (noise floor)."><span className="text-xs text-mutedfg font-mono">auto: below B</span></SRow>
+    </SCard>
+    <SCard title="Test scorer" desc="Paste an arXiv ID to preview the computed score.">
+      <div className="flex gap-2"><Input className="font-mono flex-1" defaultValue="arXiv:2604.13502" /><Button size="sm">Score</Button></div>
+      <div className="mt-3 rounded border border-border bg-muted/30 p-3 text-xs space-y-1 font-mono">
+        <div className="flex justify-between"><span className="text-mutedfg">Title:</span><span>FinAgent-X: Multi-Agent LLM…</span></div>
+        <div className="flex justify-between"><span className="text-mutedfg">Topic match:</span><span>+0.35 · llm_for_finance</span></div>
+        <div className="flex justify-between"><span className="text-mutedfg">Inst whitelist:</span><span>+0.15 · Yale</span></div>
+        <div className="flex justify-between"><span className="text-mutedfg">Tracked author:</span><span>+0.15 · Bryan Kelly</span></div>
+        <div className="flex justify-between"><span className="text-mutedfg">Venue:</span><span>+0.08</span></div>
+        <div className="flex justify-between"><span className="text-mutedfg">Citations:</span><span>+0.00</span></div>
+        <div className="flex justify-between"><span className="text-mutedfg">HF Daily:</span><span>+0.00</span></div>
+        <div className="flex justify-between"><span className="text-mutedfg">Code:</span><span>+0.07 ✓</span></div>
+        <div className="border-t border-border my-1" />
+        <div className="flex justify-between font-semibold"><span>TOTAL:</span><span>0.80 → <Badge variant="tierA">Tier A</Badge></span></div>
+      </div>
+    </SCard>
+  </div>;
+}
+
+function InstPanel() {
+  return <div className="p-6 max-w-5xl">
+    <SHeading title="Institution whitelist" desc="Papers from whitelisted institutions get a tier bump (+1)." />
+    <SCard title="Whitelist rules">
+      <SRow label="Auto-whitelist top-ranked" hint="Import top-50 from CSRankings / QuantNet annually."><Switch checked={true} /></SRow>
+      <SRow label="Tier bump on match">
+        <select className="h-7 rounded border border-border bg-card px-2 text-xs" defaultValue="1"><option value="0">No bump</option><option value="1">+1 tier</option><option value="2">+2 tiers</option></select>
+      </SRow>
+    </SCard>
+    <div className="rounded-lg border border-border overflow-hidden">
+      <table className="w-full text-xs">
+        <thead className="bg-muted/50 border-b border-border">
+          <tr className="text-left">
+            <th className="py-2 px-3 w-14">Flag</th>
+            <th className="py-2 px-3">Institution</th>
+            <th className="py-2 px-3 w-28">Type</th>
+            <th className="py-2 px-3 w-24">Country</th>
+            <th className="py-2 px-3 w-24">Whitelist</th>
+          </tr>
+        </thead>
+        <tbody>
+          {INSTITUTIONS.slice(0,10).map(i => (
+            <tr key={i.id} className="border-b border-border last:border-0"><td className="py-2 px-3 text-base">{i.flag}</td><td className="py-2 px-3 font-medium">{i.name}</td><td className="py-2 px-3 text-mutedfg capitalize">{i.type.replace('_',' ')}</td><td className="py-2 px-3 text-mutedfg">{i.country}</td><td className="py-2 px-3"><Switch checked={i.whitelisted} /></td></tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>;
+}
+
+function AuthorsPanel() {
+  return <div className="p-6 max-w-5xl">
+    <SHeading title="Tracked authors" desc="When a tracked author publishes, you get a notification and the paper is auto-promoted." />
+    <SCard title="Tracking rules"><SRow label="Notify immediately"><Switch checked={true} /></SRow><SRow label="Auto-tier bump"><Switch checked={true} /></SRow></SCard>
+    <div className="rounded-lg border border-border overflow-hidden">
+      <table className="w-full text-xs">
+        <thead className="bg-muted/50 border-b border-border">
+          <tr className="text-left">
+            <th className="py-2 px-3">Author</th>
+            <th className="py-2 px-3 w-40">Institution</th>
+            <th className="py-2 px-3 w-20 text-right">h-idx</th>
+            <th className="py-2 px-3 w-20 text-center">Track</th>
+          </tr>
+        </thead>
+        <tbody>
+          {AUTHORS.filter(a => a.tracked).map(a => (
+            <tr key={a.id} className="border-b border-border last:border-0"><td className="py-2 px-3 font-medium">{a.name}</td><td className="py-2 px-3 text-mutedfg">{INST_BY_ID[a.institutionId]?.short}</td><td className="py-2 px-3 text-right font-mono">{a.hIndex}</td><td className="py-2 px-3 text-center"><Switch checked /></td></tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>;
+}
+
+function FeedPanel() {
+  return <div className="p-6 max-w-3xl">
+    <SHeading title="Feed display" desc="How your feed looks and behaves." />
+    <SCard title="Presentation">
+      <SRow label="Default density" hint="How tightly paper cards pack.">
+        <div className="flex gap-3 text-xs">{['Compact','Normal','Comfortable'].map(d => <label key={d} className="flex items-center gap-1.5"><input type="radio" name="density" defaultChecked={d==='Normal'} /> {d}</label>)}</div>
+      </SRow>
+      <SRow label="Show Chinese TL;DR" hint="Display zh-CN below every English TL;DR."><Switch checked /></SRow>
+      <SRow label="Auto-expand first paper"><Switch /></SRow>
+      <SRow label="Sort default"><select className="h-7 rounded border border-border bg-card px-2 text-xs"><option>Newest first</option><option>Relevance</option><option>Tier</option></select></SRow>
+    </SCard>
+  </div>;
+}
+
+function DigestPanel() {
+  return <div className="p-6 max-w-3xl">
+    <SHeading title="Weekly digest" desc="Generated every Monday morning." />
+    <SCard title="Schedule">
+      <SRow label="Enable"><Switch checked /></SRow>
+      <SRow label="Day of week"><select className="h-7 rounded border border-border bg-card px-2 text-xs"><option>Monday</option><option>Sunday</option><option>Friday</option></select></SRow>
+      <SRow label="Generation time"><Input type="time" defaultValue="09:00" className="w-28" /></SRow>
+      <SRow label="Timezone"><select className="h-7 rounded border border-border bg-card px-2 text-xs"><option>Asia/Shanghai (UTC+8)</option><option>America/New_York (UTC-5)</option></select></SRow>
+    </SCard>
+    <SCard title="Content">
+      <SRow label="Top picks count"><Input type="number" defaultValue={5} className="w-20" /></SRow>
+      <SRow label="Include sections">
+        <div className="space-y-1.5">{['Top 5 picks','Topic trends','Tracked authors','Conference deadlines','Reading stats'].map(s => <label key={s} className="flex items-center gap-2 text-xs"><Checkbox checked={s!=='Reading stats'} onChange={()=>{}} /> {s}</label>)}</div>
+      </SRow>
+      <SRow label="Language">
+        <div className="flex gap-3 text-xs"><label className="flex items-center gap-1.5"><input type="radio" name="lang" /> English first</label><label className="flex items-center gap-1.5"><input type="radio" name="lang" defaultChecked /> 中文 first</label></div>
+      </SRow>
+    </SCard>
+    <SCard title="Delivery">
+      <SRow label="Email to"><Input defaultValue="you@paperpulse.app, team@quant.co" /></SRow>
+      <SRow label="Post to Slack"><Switch checked /></SRow>
+      <SRow label="Archive to"><Input className="font-mono" defaultValue="/digest/{year}/W{week}.md" /></SRow>
+    </SCard>
+  </div>;
+}
+
+function LLMPanel() {
+  return <div className="p-6 max-w-3xl">
+    <SHeading title="LLM" desc="Claude generates TL;DRs, digest text, and topic classification." />
+    <SCard title="Provider">
+      <SRow label="Provider"><select className="h-7 rounded border border-border bg-card px-2 text-xs"><option>Anthropic Claude</option><option>OpenAI</option><option>Self-hosted (Ollama)</option></select></SRow>
+      <SRow label="Model"><select className="h-7 rounded border border-border bg-card px-2 text-xs"><option>claude-opus-4-5</option><option selected>claude-sonnet-4-5</option><option>claude-haiku-4-5</option></select></SRow>
+      <SRow label="API key" hint="Stored encrypted."><Input type="password" className="font-mono" defaultValue="sk-ant-••••••••••••••••••••••••••" /></SRow>
+      <SRow label="Max TL;DR tokens"><Input type="number" defaultValue={150} className="w-24" /></SRow>
+      <SRow label="Temperature"><Slider min={0} max={1} step={0.05} value={0.3} onChange={()=>{}} /></SRow>
+    </SCard>
+    <SCard title="Prompts">
+      <div className="text-[10px] uppercase tracking-wider text-mutedfg font-semibold mb-1">TL;DR prompt</div>
+      <Textarea className="font-mono text-[11px]" rows={5} defaultValue={`You are summarizing a quantitative finance or ML paper. Output 2 versions:\n1. English TL;DR: ≤ 30 words, technical, one sentence.\n2. 中文 TL;DR: ≤ 40 字, same meaning, idiomatic Chinese.\nFocus on the concrete contribution.`} />
+    </SCard>
+    <SCard title="Usage">
+      <div className="grid grid-cols-4 gap-3 text-center">
+        {[['Calls','1,284'],['Tokens','3.1M'],['Cost','$42.81'],['Latency','1.2s']].map(([l,v]) => <div key={l} className="rounded border border-border bg-card p-2"><div className="text-[9px] text-mutedfg uppercase font-semibold">{l}</div><div className="text-lg font-semibold font-mono">{v}</div></div>)}
+      </div>
+    </SCard>
+  </div>;
+}
+
+function NotifPanel() {
+  const ts = [
+    { name:'Tier A + tracked author', desc:'Any paper with tier=A + trackedAuthor flag.', ch:['push','email'] },
+    { name:'3 top topics', desc:'neural-sde, agentic-trading, diffusion-finance.', ch:['push'] },
+    { name:'Deadline < 7 days', desc:'Conferences in your watchlist.', ch:['push','email'] },
+    { name:'HF Daily match', desc:'A HF Daily paper matches your topics.', ch:['push'] },
+    { name:'Weekly digest ready', desc:'Monday morning summary.', ch:['email','slack'] },
+    { name:'Ingest failure', desc:'A source repeatedly fails.', ch:['email'] },
+  ];
+  return <div className="p-6 max-w-4xl">
+    <SHeading title="Notifications" />
+    <SCard title="Global">
+      <SRow label="Quiet hours"><div className="flex items-center gap-2"><Input type="time" defaultValue="22:00" className="w-28" /><span className="text-xs text-mutedfg">to</span><Input type="time" defaultValue="08:00" className="w-28" /></div></SRow>
+      <SRow label="Digest mode"><Switch checked /></SRow>
+    </SCard>
+    <SCard title="Triggers">
+      <div className="space-y-2">
+        {ts.map(t => (
+          <div key={t.name} className="flex items-start gap-3 p-2.5 rounded border border-border text-xs">
+            <div className="flex-1"><div className="font-medium">{t.name}</div><div className="text-[11px] text-mutedfg">{t.desc}</div></div>
+            <div className="flex gap-1">{['push','email','slack'].map(c => <Badge key={c} variant={t.ch.includes(c)?'default':'outline'} className="text-[9px] uppercase">{c}</Badge>)}</div>
+            <Switch checked />
+          </div>
+        ))}
+      </div>
+    </SCard>
+  </div>;
+}
+
+function DataPanel() {
+  return <div className="p-6 max-w-3xl">
+    <SHeading title="Data" desc="Storage, retention, backups." />
+    <SCard title="Storage">
+      <SRow label="Database"><select className="h-7 rounded border border-border bg-card px-2 text-xs"><option selected>SQLite (local)</option><option>PostgreSQL</option></select></SRow>
+      <SRow label="Path"><Input className="font-mono" defaultValue="~/.paperpulse/papers.db" /></SRow>
+      <SRow label="PDF cache"><div className="flex gap-2 items-center"><Input className="font-mono flex-1" defaultValue="~/.paperpulse/pdfs" /><span className="text-xs text-mutedfg font-mono whitespace-nowrap">2.4 GB</span></div></SRow>
+    </SCard>
+    <SCard title="Retention">
+      <SRow label="Keep Tier C for"><select className="h-7 rounded border border-border bg-card px-2 text-xs"><option>30 days</option><option selected>90 days</option><option>1 year</option><option>Forever</option></select></SRow>
+      <SRow label="Keep Tier A/B for"><span className="text-xs font-mono">Forever</span></SRow>
+    </SCard>
+    <SCard title="Backup & export">
+      <div className="grid grid-cols-3 gap-3"><Button size="sm" variant="outline">Export → JSON</Button><Button size="sm" variant="outline">Export → BibTeX</Button><Button size="sm" variant="outline">Backup DB</Button></div>
+      <div className="mt-3 text-[11px] text-mutedfg">Last backup: 2026-04-21 03:17 · 312 MB</div>
+    </SCard>
+    <SCard title="Danger zone"><Button size="sm" variant="destructive"><Icon.Trash /> Clear all papers</Button><p className="text-[11px] text-mutedfg mt-2">This permanently deletes your paper database. Cannot be undone.</p></SCard>
+  </div>;
+}
+
+function IntegPanel() {
+  const list = [
+    { n:'Zotero', d:'Sync saved papers to your Zotero library.', c:true },
+    { n:'Notion', d:'Append weekly digest to a Notion database.', c:true },
+    { n:'Slack', d:'Post notifications to a Slack channel.', c:true },
+    { n:'Obsidian', d:'Write notes to your Obsidian vault.', c:false },
+    { n:'Readwise', d:'Forward highlights to Readwise.', c:false },
+    { n:'Feishu (飞书)', d:'Send Chinese digest to Feishu.', c:false },
+    { n:'DingTalk (钉钉)', d:'Team notifications via DingTalk.', c:false },
+    { n:'GitHub', d:'Open issues from ignored papers.', c:false },
+  ];
+  return <div className="p-6 max-w-4xl">
+    <SHeading title="Integrations" desc="Plug PaperPulse into your workflow." />
+    <div className="grid grid-cols-2 gap-3">
+      {list.map(i => (
+        <Card key={i.n} className="p-3 flex items-start gap-3">
+          <div className="h-8 w-8 rounded bg-muted flex items-center justify-center font-semibold shrink-0">{i.n[0]}</div>
+          <div className="flex-1 min-w-0">
+            <div className="font-medium text-sm flex items-center gap-2">{i.n}{i.c && <Badge variant="tierA">Connected</Badge>}</div>
+            <div className="text-[11px] text-mutedfg">{i.d}</div>
+            <Button size="sm" variant={i.c?'outline':'default'} className="mt-2">{i.c?'Disconnect':'Connect'}</Button>
+          </div>
+        </Card>
+      ))}
+    </div>
+  </div>;
+}
+
+function DeployPanel() {
+  const res = [{l:'CPU', pct:24, meta:'0.4 / 2 cores'},{l:'Memory', pct:62, meta:'1.2 / 2 GB'},{l:'Disk', pct:38, meta:'3.1 / 8 GB'}];
+  const srv = [{n:'ingest-worker',s:'running',u:'14d 3h'},{n:'scorer',s:'running',u:'14d 3h'},{n:'llm-worker',s:'running',u:'2d 17h'},{n:'digest-scheduler',s:'idle',u:'—'},{n:'notification-bus',s:'running',u:'14d 3h'}];
+  return <div className="p-6 max-w-3xl">
+    <SHeading title="Deployment" desc="Where PaperPulse runs." />
+    <SCard title="Mode">
+      <div className="space-y-2">
+        <label className="flex items-start gap-3 p-3 rounded border border-border cursor-pointer hover:border-fg/30"><input type="radio" name="mode" defaultChecked className="mt-0.5" /><div className="flex-1"><div className="font-medium text-sm flex items-center gap-2">Local · Docker Compose<Badge variant="tierA">Recommended</Badge></div><div className="text-[11px] text-mutedfg">Runs on your machine. Data never leaves.</div></div></label>
+        <label className="flex items-start gap-3 p-3 rounded border border-border cursor-pointer"><input type="radio" name="mode" className="mt-0.5" /><div className="flex-1"><div className="font-medium text-sm">Self-hosted VPS</div><div className="text-[11px] text-mutedfg">Deploy via Docker to your own server.</div></div></label>
+        <label className="flex items-start gap-3 p-3 rounded border border-border cursor-pointer"><input type="radio" name="mode" className="mt-0.5" /><div className="flex-1"><div className="font-medium text-sm">PaperPulse Cloud</div><div className="text-[11px] text-mutedfg">Managed — $12/mo.</div></div></label>
+      </div>
+    </SCard>
+    <SCard title="Resources">
+      <div className="grid grid-cols-3 gap-3 text-xs">
+        {res.map(r => (
+          <div key={r.l}>
+            <div className="flex justify-between mb-1"><span>{r.l}</span><span className="font-mono text-mutedfg">{r.pct}%</span></div>
+            <div className="h-1.5 rounded-full bg-muted overflow-hidden"><div className={cn('h-full', r.pct>80?'bg-rose-500':r.pct>60?'bg-amber-500':'bg-emerald-500')} style={{width:r.pct+'%'}} /></div>
+            <div className="text-[10px] text-mutedfg mt-1 font-mono">{r.meta}</div>
+          </div>
+        ))}
+      </div>
+    </SCard>
+    <SCard title="Services">
+      <div className="space-y-1.5">
+        {srv.map(s => (
+          <div key={s.n} className="flex items-center gap-3 p-2 rounded border border-border text-xs">
+            <div className={cn('h-2 w-2 rounded-full', s.s==='running' ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400')} />
+            <span className="font-mono flex-1">{s.n}</span>
+            <span className="text-mutedfg">{s.s}</span>
+            <span className="text-mutedfg font-mono">{s.u}</span>
+          </div>
+        ))}
+      </div>
+    </SCard>
+  </div>;
+}
+
+function AboutPanel() {
+  return <div className="p-6 max-w-3xl">
+    <SHeading title="About" />
+    <SCard title="PaperPulse">
+      <div className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-1.5 text-xs">
+        <div className="text-mutedfg">Version</div><div className="font-mono">0.8.3</div>
+        <div className="text-mutedfg">Build</div><div className="font-mono">2026.04.22-a8e4c71</div>
+        <div className="text-mutedfg">Schema</div><div className="font-mono">v14</div>
+        <div className="text-mutedfg">License</div><div>MIT</div>
+        <div className="text-mutedfg">Last check</div><div className="font-mono">3h ago · up to date</div>
+      </div>
+      <div className="flex gap-2 mt-3"><Button size="sm" variant="outline">Check for updates</Button><Button size="sm" variant="outline"><Icon.ExternalLink /> Changelog</Button><Button size="sm" variant="outline"><Icon.ExternalLink /> GitHub</Button></div>
+    </SCard>
+    <SCard title="Keyboard shortcuts">
+      <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-xs">
+        {[['⌘K','Command palette'],['j / k','Next / prev paper'],['o','Open expanded view'],['s','Save'],['m','Mark must-read'],['i','Ignore'],['g f','Go to Feed'],['g d','Go to Dashboard'],['g e','Go to Explore'],['⌘⇧D','Toggle dark mode'],['?','Show all shortcuts'],['Esc','Dismiss dialog']].map(([k,v]) => (
+          <div key={k} className="flex justify-between py-0.5"><span className="text-mutedfg">{v}</span><kbd>{k}</kbd></div>
+        ))}
+      </div>
+    </SCard>
+  </div>;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
