@@ -1,6 +1,7 @@
 import { NavLink, Navigate, Route, Routes } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import KeywordsTab from "./KeywordsTab";
+import SeedsTab from "./SeedsTab";
 
 const TABS = [
   { slug: "keywords", label: "Keywords" },
@@ -47,7 +48,7 @@ export default function Settings() {
           <Routes>
             <Route index element={<Navigate to="keywords" replace />} />
             <Route path="keywords" element={<KeywordsTab />} />
-            <Route path="seeds" element={<Stub pr="PR #3.3" />} />
+            <Route path="seeds" element={<SeedsTab />} />
             <Route path="topics" element={<Stub pr="PR #3.4" />} />
             <Route path="tiers" element={<Stub pr="PR #3.5" />} />
           </Routes>

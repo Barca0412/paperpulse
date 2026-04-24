@@ -56,3 +56,62 @@ async def post_keywords(payload: KeywordsPayload) -> dict[str, Any]:
             raise HTTPException(status_code=422, detail=f"positive.{k} missing")
     _write("keywords", payload.model_dump())
     return _read("keywords")
+
+
+# ── Seeds ─────────────────────────────────────────────────────────────────
+
+
+class SeedPaper(BaseModel):
+    id: str | None = None
+    title: str
+    abstract: str | None = None
+    doi: str | None = None
+    arxiv_id: str | None = None
+    base_weight: float = 1.0
+    half_life_days: float | None = None
+    added_at: str | None = None
+
+
+class SeedsPayload(BaseModel):
+    seed_papers: list[SeedPaper] = []
+    user_must_read_papers: list[SeedPaper] = []
+    seed_meta: dict[str, Any] = {}
+
+
+@router.get("/seeds")
+async def get_seeds() -> dict[str, Any]:
+    return _read("seeds")
+
+
+@router.post("/seeds")
+async def post_seeds(payload: SeedsPayload) -> dict[str, Any]:
+    _write("seeds", payload.model_dump())
+    return _read("seeds")
+
+
+# ── Topics ────────────────────────────────────────────────────────────────
+
+
+class Topic(BaseModel):
+    name: str
+    slug: str
+    side: str  # "cs" | "finance" | "crosscut"
+    description_en: str = ""
+    description_zh: str = ""
+    weight: float = 1.0
+    color: str | None = None
+
+
+class TopicsPayload(BaseModel):
+    topics: list[Topic] = []
+
+
+@router.get("/topics")
+async def get_topics() -> dict[str, Any]:
+    return _read("topics")
+
+
+@router.post("/topics")
+async def post_topics(payload: TopicsPayload) -> dict[str, Any]:
+    _write("topics", payload.model_dump())
+    return _read("topics")

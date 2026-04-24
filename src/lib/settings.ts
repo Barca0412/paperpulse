@@ -24,3 +24,78 @@ export async function saveKeywords(p: KeywordsPayload): Promise<KeywordsPayload>
   if (!r.ok) throw new Error(`saveKeywords ${r.status} ${await r.text()}`);
   return (await r.json()) as KeywordsPayload;
 }
+
+export interface SeedPaper {
+  id: string | null;
+  title: string;
+  abstract: string | null;
+  doi: string | null;
+  arxiv_id: string | null;
+  base_weight: number;
+  half_life_days: number | null;
+  added_at: string | null;
+}
+
+export interface SeedsPayload {
+  seed_papers: SeedPaper[];
+  user_must_read_papers: SeedPaper[];
+  seed_meta: Record<string, unknown>;
+}
+
+export async function getSeeds(): Promise<SeedsPayload> {
+  const r = await fetch(`${BASE}/api/v1/settings/seeds`);
+  if (!r.ok) throw new Error(`getSeeds ${r.status} ${await r.text()}`);
+  const body = (await r.json()) as Partial<SeedsPayload>;
+  return {
+    seed_papers: body.seed_papers ?? [],
+    user_must_read_papers: body.user_must_read_papers ?? [],
+    seed_meta: body.seed_meta ?? {},
+  };
+}
+
+export async function saveSeeds(p: SeedsPayload): Promise<SeedsPayload> {
+  const r = await fetch(`${BASE}/api/v1/settings/seeds`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(p),
+  });
+  if (!r.ok) throw new Error(`saveSeeds ${r.status} ${await r.text()}`);
+  const body = (await r.json()) as Partial<SeedsPayload>;
+  return {
+    seed_papers: body.seed_papers ?? [],
+    user_must_read_papers: body.user_must_read_papers ?? [],
+    seed_meta: body.seed_meta ?? {},
+  };
+}
+
+export interface Topic {
+  name: string;
+  slug: string;
+  side: "cs" | "finance" | "crosscut";
+  description_en: string;
+  description_zh: string;
+  weight: number;
+  color: string | null;
+}
+
+export interface TopicsPayload {
+  topics: Topic[];
+}
+
+export async function getTopics(): Promise<TopicsPayload> {
+  const r = await fetch(`${BASE}/api/v1/settings/topics`);
+  if (!r.ok) throw new Error(`getTopics ${r.status} ${await r.text()}`);
+  const body = (await r.json()) as Partial<TopicsPayload>;
+  return { topics: body.topics ?? [] };
+}
+
+export async function saveTopics(p: TopicsPayload): Promise<TopicsPayload> {
+  const r = await fetch(`${BASE}/api/v1/settings/topics`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(p),
+  });
+  if (!r.ok) throw new Error(`saveTopics ${r.status} ${await r.text()}`);
+  const body = (await r.json()) as Partial<TopicsPayload>;
+  return { topics: body.topics ?? [] };
+}

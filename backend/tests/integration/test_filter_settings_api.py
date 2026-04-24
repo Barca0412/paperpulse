@@ -104,3 +104,52 @@ def test_post_keywords_validates_positive_buckets(client: TestClient) -> None:
         },
     )
     assert r.status_code == 422
+
+
+def test_seeds_roundtrip(client: TestClient, monkeypatch) -> None:
+    # Without stubbing embedding, an anchor-cache rebuild triggered by the
+    # seeds reload would try to load bge-m3 → monkeypatch the backend.
+    from paperpulse.filter import embedding as _emb
+    from tests.fixtures.bge_m3_stub import StubEmbedder
+
+    monkeypatch.setattr(_emb, "_backend", StubEmbedder())
+
+    payload = {
+        "seed_papers": [
+            {
+                "id": "s1",
+                "title": "Deep hedging",
+                "abstract": "policy network for hedging",
+                "base_weight": 1.0,
+            }
+        ],
+        "user_must_read_papers": [],
+        "seed_meta": {"total_active": 1},
+    }
+    r = client.post("/api/v1/settings/seeds", json=payload)
+    assert r.status_code == 200
+    body = r.json()
+    assert body["seed_papers"][0]["title"] == "Deep hedging"
+
+
+def test_topics_roundtrip(client: TestClient, monkeypatch) -> None:
+    from paperpulse.filter import embedding as _emb
+    from tests.fixtures.bge_m3_stub import StubEmbedder
+
+    monkeypatch.setattr(_emb, "_backend", StubEmbedder())
+
+    payload = {
+        "topics": [
+            {
+                "name": "Foo",
+                "slug": "foo",
+                "side": "cs",
+                "description_en": "A topic about foo",
+                "description_zh": "foo 主题",
+                "weight": 1.2,
+            }
+        ]
+    }
+    r = client.post("/api/v1/settings/topics", json=payload)
+    assert r.status_code == 200
+    assert r.json()["topics"][0]["slug"] == "foo"
