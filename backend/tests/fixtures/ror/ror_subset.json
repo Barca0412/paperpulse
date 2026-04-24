@@ -1,0 +1,82 @@
+[
+  {
+    "id": "https://ror.org/00f54p054",
+    "name": "Stanford University",
+    "aliases": [],
+    "country": {"country_code": "US"},
+    "addresses": [{"city": "Stanford", "lat": 37.4, "lng": -122.2}],
+    "types": ["Education"]
+  },
+  {
+    "id": "https://ror.org/042nb2s44",
+    "name": "Massachusetts Institute of Technology",
+    "aliases": ["MIT"],
+    "country": {"country_code": "US"},
+    "addresses": [{"city": "Cambridge", "lat": 42.4, "lng": -71.1}],
+    "types": ["Education"]
+  },
+  {
+    "id": "https://ror.org/01f5ytq51",
+    "name": "Bloomberg L.P.",
+    "aliases": ["Bloomberg"],
+    "country": {"country_code": "US"},
+    "addresses": [{"city": "New York"}],
+    "types": ["Company"]
+  },
+  {
+    "id": "https://ror.org/01tgyzw49",
+    "name": "National University of Singapore",
+    "aliases": ["NUS"],
+    "country": {"country_code": "SG"},
+    "addresses": [{"city": "Singapore"}],
+    "types": ["Education"]
+  },
+  {
+    "id": "https://ror.org/024mw5h28",
+    "name": "University of Chicago",
+    "aliases": ["UChicago"],
+    "country": {"country_code": "US"},
+    "addresses": [{"city": "Chicago"}],
+    "types": ["Education"]
+  },
+  {
+    "id": "https://ror.org/03v76x132",
+    "name": "Yale University",
+    "aliases": ["Yale"],
+    "country": {"country_code": "US"},
+    "addresses": [{"city": "New Haven"}],
+    "types": ["Education"]
+  },
+  {
+    "id": "https://ror.org/01eze0w76",
+    "name": "European Central Bank",
+    "aliases": ["ECB"],
+    "country": {"country_code": "DE"},
+    "addresses": [{"city": "Frankfurt"}],
+    "types": ["Government"]
+  },
+  {
+    "id": "https://ror.org/00bz58a44",
+    "name": "Federal Reserve Board",
+    "aliases": ["FRB", "Fed"],
+    "country": {"country_code": "US"},
+    "addresses": [{"city": "Washington"}],
+    "types": ["Government"]
+  },
+  {
+    "id": "https://ror.org/03cve4549",
+    "name": "Tsinghua University",
+    "aliases": ["清华大学"],
+    "country": {"country_code": "CN"},
+    "addresses": [{"city": "Beijing"}],
+    "types": ["Education"]
+  },
+  {
+    "id": "https://ror.org/03ccazx70",
+    "name": "National Bureau of Economic Research",
+    "aliases": ["NBER"],
+    "country": {"country_code": "US"},
+    "addresses": [{"city": "Cambridge"}],
+    "types": ["Nonprofit"]
+  }
+]
