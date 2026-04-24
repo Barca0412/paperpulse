@@ -1,6 +1,7 @@
 # Node
 node_modules/
 dist-tsbuild/
+*.tsbuildinfo
 .pnpm-debug.log*
 dist/
 dist-ssr/
