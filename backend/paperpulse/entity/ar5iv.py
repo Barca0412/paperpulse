@@ -77,7 +77,7 @@ def parse(html: bytes | str) -> list[Ar5ivAffiliation]:
     return out
 
 
-def fetch_and_parse(arxiv_id: str, *, timeout: int = 15) -> list[Ar5ivAffiliation]:
+def fetch_and_parse(arxiv_id: str, *, timeout: int = 60) -> list[Ar5ivAffiliation]:
     bare = arxiv_id.split("v")[0] if "v" in arxiv_id else arxiv_id
     url = f"https://ar5iv.labs.arxiv.org/html/{bare}"
     req = urllib.request.Request(url, headers={"User-Agent": _UA})
