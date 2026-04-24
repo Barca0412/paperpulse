@@ -11,10 +11,15 @@ from __future__ import annotations
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from paperpulse.api.router import api_router
+from paperpulse.logging_setup import get_logger, setup_logging
+
+setup_logging()
+_log = get_logger(__name__)
 
 
 @asynccontextmanager
@@ -42,6 +47,15 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
     app.include_router(api_router)
+
+    @app.exception_handler(Exception)
+    async def _unhandled(_req: Request, exc: Exception) -> JSONResponse:
+        _log.exception("unhandled exception", error=repr(exc))
+        return JSONResponse(
+            status_code=500,
+            content={"error": "internal_error", "detail": str(exc)},
+        )
+
     return app
 
 
