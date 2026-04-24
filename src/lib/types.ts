@@ -32,9 +32,29 @@ export type Paper = {
   user_status: PaperStatus;
 };
 
-export type FeedResponse = {
-  total: number;
+export type GroupBy = "flat" | "topic" | "tier" | "source" | "institution";
+export type SortKey = "date" | "relevance" | "citations";
+export type TimeWindow = "today" | "week" | "month" | "all";
+
+export type FeedGroup = {
+  label: string;
+  label_type: string;
+  count: number;
   papers: Paper[];
+};
+
+export type FeedResponse =
+  | { total: number; group_by: "flat"; papers: Paper[] }
+  | { total: number; group_by: Exclude<GroupBy, "flat">; groups: FeedGroup[] };
+
+export type FeedQuery = {
+  limit?: number;
+  group_by?: GroupBy;
+  time_window?: TimeWindow;
+  sort?: SortKey;
+  tier?: string[];
+  source?: string[];
+  topic?: string[];
 };
 
 export type IngestResponse = { queued: string[] };

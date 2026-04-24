@@ -1,5 +1,6 @@
 import type {
   Author,
+  FeedQuery,
   FeedResponse,
   HealthResponse,
   IngestResponse,
@@ -28,9 +29,23 @@ async function jpost<T>(path: string, body: unknown): Promise<T> {
   return (await resp.json()) as T;
 }
 
+function feedQuery(q: FeedQuery): string {
+  const p = new URLSearchParams();
+  if (q.limit !== undefined) p.set("limit", String(q.limit));
+  if (q.group_by) p.set("group_by", q.group_by);
+  if (q.time_window) p.set("time_window", q.time_window);
+  if (q.sort) p.set("sort", q.sort);
+  if (q.tier && q.tier.length) p.set("tier", q.tier.join(","));
+  if (q.source && q.source.length) p.set("source", q.source.join(","));
+  if (q.topic && q.topic.length) p.set("topic", q.topic.join(","));
+  const s = p.toString();
+  return s ? `?${s}` : "";
+}
+
 export const api = {
   health: () => jget<HealthResponse>("/api/v1/hello"),
-  getFeed: (limit = 100) => jget<FeedResponse>(`/api/v1/feed?limit=${limit}`),
+  getFeed: (q: FeedQuery = {}) =>
+    jget<FeedResponse>(`/api/v1/feed${feedQuery({ limit: 100, ...q })}`),
   runIngestNow: (sources?: string[]) =>
     jpost<IngestResponse>("/api/v1/settings/ingest/run-now", {
       sources: sources ?? null,

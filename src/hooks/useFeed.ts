@@ -1,22 +1,24 @@
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import type { FeedResponse } from "@/lib/types";
+import type { FeedQuery, FeedResponse } from "@/lib/types";
 
 type State =
   | { kind: "loading" }
   | { kind: "ok"; data: FeedResponse }
   | { kind: "error"; message: string };
 
-export function useFeed(limit = 100) {
+export function useFeed(query: FeedQuery = {}) {
   const [state, setState] = useState<State>({ kind: "loading" });
   const [tick, setTick] = useState(0);
   const reload = () => setTick((t) => t + 1);
+
+  const qKey = JSON.stringify(query);
 
   useEffect(() => {
     let cancelled = false;
     setState({ kind: "loading" });
     api
-      .getFeed(limit)
+      .getFeed(query)
       .then((data) => {
         if (!cancelled) setState({ kind: "ok", data });
       })
@@ -30,7 +32,8 @@ export function useFeed(limit = 100) {
     return () => {
       cancelled = true;
     };
-  }, [limit, tick]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [qKey, tick]);
 
   return { state, reload };
 }
