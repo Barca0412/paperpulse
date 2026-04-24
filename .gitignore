@@ -1,0 +1,40 @@
+# Node
+node_modules/
+dist-tsbuild/
+.pnpm-debug.log*
+dist/
+dist-ssr/
+
+# Rust
+src-tauri/target/
+
+# Python
+backend/.venv/
+backend/__pycache__/
+backend/**/__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Data (runtime)
+data/
+*.duckdb
+*.duckdb.wal
+*.lance/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# Env
+.env
+.env.local
+
+# Logs
+*.log
