@@ -8,10 +8,10 @@ export function TopBar() {
   const { darkMode, toggleDarkMode } = useStore();
   return (
     <header className="h-12 shrink-0 border-b bg-background/80 backdrop-blur flex items-center px-3 gap-3">
-      {/* macOS provides real traffic lights at window top-left; left-pad here so
-          the logo doesn't crash into them. design-reference's fake lights were
-          for browser-only mockup mode and don't apply in a Tauri native window. */}
-      <div className="w-16 shrink-0" />
+      {/* macOS draws its real traffic lights in a separate title bar above us
+          (default tauri titleBarStyle), so our header starts at the true left
+          edge — no left-pad needed. design-reference's fake lights were for
+          browser-only mockup mode. */}
       <div className="flex items-center gap-2">
         <div className="h-6 w-6 rounded-md bg-gradient-to-br from-emerald-500 to-sky-500 flex items-center justify-center">
           <svg viewBox="0 0 32 32" className="h-3.5 w-3.5 text-white">
