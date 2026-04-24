@@ -34,3 +34,10 @@ def duckdb_path() -> Path:
 
 def lancedb_path() -> Path:
     return data_dir() / "papers.lance"
+
+
+def models_dir() -> Path:
+    env = os.environ.get("PAPERPULSE_MODELS_DIR")
+    base = Path(env).expanduser() if env else Path.home() / ".paperpulse" / "models"
+    base.mkdir(parents=True, exist_ok=True)
+    return base
