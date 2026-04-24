@@ -8,7 +8,7 @@ import Conferences from "@/pages/Conferences";
 import Digest from "@/pages/Digest";
 import Institutions from "@/pages/Institutions";
 import Authors from "@/pages/Authors";
-import Settings from "@/pages/Settings";
+import Settings from "@/pages/settings";
 
 export default function App() {
   return (
@@ -23,7 +23,7 @@ export default function App() {
         <Route path="digest" element={<Digest />} />
         <Route path="institutions" element={<Institutions />} />
         <Route path="authors" element={<Authors />} />
-        <Route path="settings" element={<Settings />} />
+        <Route path="settings/*" element={<Settings />} />
       </Route>
     </Routes>
   );
